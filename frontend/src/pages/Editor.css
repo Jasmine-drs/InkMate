@@ -220,7 +220,10 @@
   background: var(--bg-secondary);
   border-left: 1px solid var(--border-primary);
   padding: 0;
-  overflow-y: auto;
+  overflow: hidden;
+  height: calc(100vh - 64px);
+  position: sticky;
+  top: 64px;
 }
 
 .sider-content {
@@ -229,6 +232,7 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  overflow-y: auto;
 }
 
 .sider-header {
@@ -361,12 +365,17 @@
   line-height: 1.5 !important;
 }
 
-/* 快速操作 */
+/* 快速操作 - 粘性固定在底部 */
 .quick-actions {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-top: auto;
+  /* 粘性定位，固定在滚动容器底部 */
+  position: sticky;
+  bottom: 0;
+  background: var(--bg-secondary);
+  padding: 16px 0 0 0;
+  margin: auto 0 0 0;
 }
 
 .quick-btn {

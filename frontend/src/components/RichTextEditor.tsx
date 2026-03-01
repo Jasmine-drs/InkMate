@@ -70,7 +70,7 @@ export function RichTextEditor({ content, onChange, onSave, onAIContinue, projec
 
   /**
    * 插入流式 token
-   * 直接在当前光标位置插入文本，不创建新段落
+   * 直接在当前光标位置插入文本，正确处理换行符
    */
   const insertStreamingToken = useCallback((token: string) => {
     if (!editor) return;
@@ -79,16 +79,22 @@ export function RichTextEditor({ content, onChange, onSave, onAIContinue, projec
 
     // 处理 token 中的换行符
     if (token.includes('\n')) {
-      // 按换行符分割
+      // 将换行符替换为特殊标记，然后逐段处理
       const parts = token.split('\n');
+
       parts.forEach((part, index) => {
-        if (part) {
-          // 插入文本
-          editor.chain().focus().insertContent(part).run();
-        }
-        // 如果不是最后一部分，插入换行（创建新段落）
-        if (index < parts.length - 1) {
-          editor.chain().focus().splitBlock().run();
+        if (index === 0) {
+          // 第一部分直接插入
+          if (part) {
+            editor.chain().focus().insertContent(part).run();
+          }
+        } else {
+          // 后续部分：先换行，再插入内容
+          // 使用 setHardBreak 在当前段落内换行
+          editor.chain().focus().setHardBreak().run();
+          if (part) {
+            editor.chain().focus().insertContent(part).run();
+          }
         }
       });
     } else {

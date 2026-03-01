@@ -133,17 +133,11 @@ export default function Editor() {
       }
 
       try {
-        // 尝试通过 ID 获取章节（chapterId 可能是数字或 UUID）
-        let chapter;
-        const chapterNum = parseInt(chapterId, 10);
-        if (!isNaN(chapterNum)) {
-          chapter = await getChapter(projectId, chapterNum);
-        } else {
-          chapter = await getChapterById(projectId, chapterId);
-        }
+        // 按 UUID 获取章节（前端导航始终使用 UUID）
+        const chapter = await getChapterById(projectId, chapterId);
 
         if (chapter) {
-          setTitle(chapter.title);
+          setTitle(chapter.title || '');
           setContent(chapter.content || '');
         }
       } catch (error: unknown) {

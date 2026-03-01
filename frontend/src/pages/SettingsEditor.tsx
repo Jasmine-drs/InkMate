@@ -15,6 +15,11 @@ import {
   Divider,
   Spin,
   App,
+  Modal,
+  Progress,
+  Tag,
+  Alert,
+  List,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -25,9 +30,16 @@ import {
   UserOutlined,
   EnvironmentOutlined,
   RobotOutlined,
+  CheckCircleOutlined,
+  GlobalOutlined,
 } from '@ant-design/icons';
 import { getProject, updateProject } from '@/services/project';
-import { generate } from '@/services/ai';
+import {
+  generateSettingStream,
+  generateFullWorldview,
+  checkSettingConsistency,
+} from '@/services/settings';
+import type { ConsistencyCheckResult } from '@/services/settings';
 import './SettingsEditor.css';
 
 const { Header, Content } = Layout;
@@ -96,6 +108,17 @@ export default function SettingsEditor() {
   const [saving, setSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [form] = Form.useForm<SettingsFormValues>();
+
+  // AI 生成状态
+  const [_generatingField, setGeneratingField] = useState<string | null>(null);
+  const [_generatingContent, setGeneratingContent] = useState('');
+  const [isGeneratingFull, setIsGeneratingFull] = useState(false);
+  const [isCheckingConsistency, setIsCheckingConsistency] = useState(false);
+  const [consistencyResult, setConsistencyResult] = useState<ConsistencyCheckResult | null>(null);
+  const [showConsistencyModal, setShowConsistencyModal] = useState(false);
+  const [showFullGenerateModal, setShowFullGenerateModal] = useState(false);
+  const [fullGenre, setFullGenre] = useState('');
+  const [fullDescription, setFullDescription] = useState('');
 
   // 离开页面确认（React Router v6.4+）
   const blocker = useBlocker(hasUnsavedChanges);
@@ -174,7 +197,7 @@ export default function SettingsEditor() {
     }
   };
 
-  // AI 辅助生成设定
+  // AI 辅助生成设定（流式）
   const handleAIGenerate = async (field: keyof SettingsFormValues) => {
     const fieldLabels: Record<string, string> = {
       worldView: '世界观',
@@ -190,18 +213,100 @@ export default function SettingsEditor() {
       other: '其他设定',
     };
 
+    setGeneratingField(field);
+    setGeneratingContent('');
+
     const prompt = `请为小说创作${fieldLabels[field] || field}，要求内容丰富多彩，适合奇幻小说使用。`;
 
     try {
-      const result = await generate({ prompt, system_prompt: '你是一个专业的奇幻小说设定创作助手，请创作引人入胜的世界观设定。' });
-      if (result.content) {
-        form.setFieldValue(field, result.content);
-        setHasUnsavedChanges(true);
-        message.success(`${fieldLabels[field]} 已生成`);
-      }
+      await generateSettingStream(
+        projectId!,
+        { setting_type: field, prompt },
+        {
+          onToken: (token) => {
+            setGeneratingContent((prev) => prev + token);
+          },
+          onComplete: (content) => {
+            form.setFieldValue(field, content);
+            setHasUnsavedChanges(true);
+            setGeneratingField(null);
+            setGeneratingContent('');
+            message.success(`${fieldLabels[field]} 已生成`);
+          },
+          onError: (error) => {
+            setGeneratingField(null);
+            setGeneratingContent('');
+            message.error('AI 生成失败：' + error.message);
+          },
+        }
+      );
+    } catch (error: unknown) {
+      setGeneratingField(null);
+      setGeneratingContent('');
+      const errorMessage = error instanceof Error ? error.message : '生成失败';
+      message.error('AI 生成失败：' + errorMessage);
+    }
+  };
+
+  // AI 生成完整世界观
+  const handleGenerateFullWorldview = async () => {
+    if (!fullGenre || !fullDescription) {
+      message.error('请填写小说类型和简介');
+      return;
+    }
+
+    setIsGeneratingFull(true);
+    setGeneratingContent('');
+
+    try {
+      const result = await generateFullWorldview(projectId!, {
+        genre: fullGenre,
+        description: fullDescription,
+      });
+
+      // 设置表单值
+      const formValues: SettingsFormValues = {
+        worldView: result.worldView,
+        timeSetting: result.timeSetting,
+        locationSetting: result.locationSetting,
+        powerSystem: result.powerSystem,
+        magic: result.magic,
+        socialStructure: result.socialStructure,
+        technology: result.technology,
+        culture: result.culture,
+        history: result.history,
+        creatures: result.creatures,
+      };
+
+      form.setFieldsValue(formValues);
+      setHasUnsavedChanges(true);
+      setShowFullGenerateModal(false);
+      setFullGenre('');
+      setFullDescription('');
+      message.success('完整世界观已生成');
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : '生成失败';
       message.error('AI 生成失败：' + errorMessage);
+    } finally {
+      setIsGeneratingFull(false);
+    }
+  };
+
+  // 检查设定一致性
+  const handleCheckConsistency = async () => {
+    if (!projectId) return;
+
+    setIsCheckingConsistency(true);
+
+    try {
+      const result = await checkSettingConsistency(projectId);
+      setConsistencyResult(result);
+      setShowConsistencyModal(true);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : '检查失败';
+      message.error('一致性检查失败：' + errorMessage);
+    } finally {
+      setIsCheckingConsistency(false);
     }
   };
 
@@ -263,6 +368,21 @@ export default function SettingsEditor() {
         </div>
         <div className="header-right">
           <Space>
+            <Button
+              icon={<CheckCircleOutlined />}
+              onClick={handleCheckConsistency}
+              loading={isCheckingConsistency}
+            >
+              一致性检查
+            </Button>
+            <Button
+              type="primary"
+              ghost
+              icon={<GlobalOutlined />}
+              onClick={() => setShowFullGenerateModal(true)}
+            >
+              AI 生成完整设定
+            </Button>
             {hasUnsavedChanges && (
               <span className="unsaved-hint">* 未保存的更改</span>
             )}
@@ -602,6 +722,102 @@ export default function SettingsEditor() {
           </Form>
         </div>
       </Content>
+
+      {/* 一致性检查模态框 */}
+      <Modal
+        title="设定一致性检查结果"
+        open={showConsistencyModal}
+        onCancel={() => setShowConsistencyModal(false)}
+        footer={
+          <Button onClick={() => setShowConsistencyModal(false)}>
+            关闭
+          </Button>
+        }
+      >
+        {consistencyResult && (
+          <div>
+            <Alert
+              message={consistencyResult.consistent ? '设定一致，未发现矛盾' : '发现潜在问题'}
+              type={consistencyResult.consistent ? 'success' : 'warning'}
+              showIcon
+              style={{ marginBottom: 16 }}
+            />
+
+            {consistencyResult.issues.length > 0 && (
+              <div style={{ marginBottom: 16 }}>
+                <strong>发现的问题：</strong>
+                <List
+                  size="small"
+                  dataSource={consistencyResult.issues}
+                  renderItem={(item) => (
+                    <List.Item>
+                      <Tag color="orange">问题</Tag>
+                      {item}
+                    </List.Item>
+                  )}
+                />
+              </div>
+            )}
+
+            {consistencyResult.suggestions.length > 0 && (
+              <div>
+                <strong>改进建议：</strong>
+                <List
+                  size="small"
+                  dataSource={consistencyResult.suggestions}
+                  renderItem={(item) => (
+                    <List.Item>
+                      <Tag color="blue">建议</Tag>
+                      {item}
+                    </List.Item>
+                  )}
+                />
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
+
+      {/* 完整世界观生成模态框 */}
+      <Modal
+        title="AI 生成完整世界观"
+        open={showFullGenerateModal}
+        onCancel={() => setShowFullGenerateModal(false)}
+        confirmLoading={isGeneratingFull}
+        onOk={handleGenerateFullWorldview}
+        okText="生成"
+        cancelText="取消"
+      >
+        <p style={{ marginBottom: 16, color: '#666' }}>
+          根据您的小说类型和简介，AI 将为您生成完整的世界观设定，包括时代、地点、力量体系、社会结构等。
+        </p>
+
+        <Form layout="vertical">
+          <Form.Item label="小说类型" required>
+            <Input
+              placeholder="例如：奇幻、玄幻、都市、科幻等"
+              value={fullGenre}
+              onChange={(e) => setFullGenre(e.target.value)}
+            />
+          </Form.Item>
+
+          <Form.Item label="小说简介" required>
+            <TextArea
+              rows={4}
+              placeholder="请简要描述您的小说构思..."
+              value={fullDescription}
+              onChange={(e) => setFullDescription(e.target.value)}
+            />
+          </Form.Item>
+        </Form>
+
+        {isGeneratingFull && (
+          <div style={{ marginTop: 16 }}>
+            <p>正在生成世界观设定...</p>
+            <Progress percent={100} status="active" showInfo={false} />
+          </div>
+        )}
+      </Modal>
     </Layout>
   );
 }

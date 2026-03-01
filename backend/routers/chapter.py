@@ -74,6 +74,23 @@ async def get_next_chapter_number(
     return {"next_number": next_number}
 
 
+# 注意：/by-id/{chapter_id} 必须放在 /{chapter_num} 之前，否则 "by-id" 会被当作章节号
+@router.get("/by-id/{chapter_id}", response_model=ChapterResponse, summary="根据 ID 获取章节")
+async def get_chapter_by_id(
+    project_id: str,
+    chapter_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """根据章节 UUID 获取内容"""
+    await get_project_with_auth(project_id, db, current_user)
+    service = ChapterService(db)
+    chapter = await service.get_chapter_by_id(chapter_id)
+    if not chapter or chapter.project_id != project_id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="章节不存在")
+    return chapter
+
+
 @router.get("/{chapter_num}", response_model=ChapterResponse, summary="获取章节内容")
 async def get_chapter(
     project_id: str,
@@ -239,19 +256,3 @@ async def get_chapter_version(
             detail="版本不存在"
         )
     return version
-
-
-@router.get("/by-id/{chapter_id}", response_model=ChapterResponse, summary="根据 ID 获取章节")
-async def get_chapter_by_id(
-    project_id: str,
-    chapter_id: str,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """根据章节 UUID 获取内容"""
-    await get_project_with_auth(project_id, db, current_user)
-    service = ChapterService(db)
-    chapter = await service.get_chapter_by_id(chapter_id)
-    if not chapter or chapter.project_id != project_id:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="章节不存在")
-    return chapter

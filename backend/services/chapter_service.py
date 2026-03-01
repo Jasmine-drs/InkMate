@@ -115,7 +115,7 @@ class ChapterService:
         return chapter
 
     async def delete_chapter(self, chapter_id: str) -> bool:
-        """删除章节"""
+        """删除章节并重新排序章节号"""
         result = await self.db.execute(
             select(Chapter).where(Chapter.id == chapter_id)
         )
@@ -123,7 +123,27 @@ class ChapterService:
         if not chapter:
             return False
 
+        project_id = chapter.project_id
+        deleted_number = chapter.chapter_number
+
+        # 删除章节
         await self.db.delete(chapter)
+        await self.db.commit()
+
+        # 重新排序剩余章节的序号
+        # 获取该项目中所有章节号大于被删除章节号的章节
+        reorder_result = await self.db.execute(
+            select(Chapter)
+            .where(Chapter.project_id == project_id)
+            .where(Chapter.chapter_number > deleted_number)
+            .order_by(Chapter.chapter_number.asc())
+        )
+        chapters_to_reorder = reorder_result.scalars().all()
+
+        # 将这些章节的序号减1
+        for ch in chapters_to_reorder:
+            ch.chapter_number -= 1
+
         await self.db.commit()
         return True
 

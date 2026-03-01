@@ -3,8 +3,9 @@
  * 墨蓝色主题 + 玻璃态卡片
  */
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { Layout, Typography, Spin, Card, Button, Tabs, Tag } from 'antd';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Layout, Typography, Spin, Card, Button, Tabs, Tag, Table, Space, Popconfirm, App } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 import {
   ArrowLeftOutlined,
   FileTextOutlined,
@@ -14,8 +15,14 @@ import {
   BookOutlined,
   TeamOutlined,
   FolderOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  CheckCircleOutlined,
+  FileOutlined,
+  PlusOutlined,
 } from '@ant-design/icons';
 import { getProject } from '@/services/project';
+import { getChapterList, deleteChapter, updateChapterStatus, type ChapterData } from '@/services/chapter';
 import { ROUTES } from '@/pages/SettingsEditor';
 import './ProjectDetail.css';
 
@@ -37,17 +44,154 @@ const typeLabels: Record<string, string> = {
   unit_drama: '单元剧',
 };
 
+const statusLabels: Record<string, { label: string; color: string }> = {
+  draft: { label: '草稿', color: 'orange' },
+  finalized: { label: '定稿', color: 'green' },
+};
+
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { message: msgApi } = App.useApp();
 
-  const { data: project, isLoading, error } = useQuery({
+  // 获取项目信息
+  const { data: project, isLoading: projectLoading, error: projectError } = useQuery({
     queryKey: ['project', id],
     queryFn: () => getProject(id!),
     enabled: !!id,
   });
 
-  if (isLoading) {
+  // 获取章节列表
+  const { data: chaptersData, isLoading: chaptersLoading } = useQuery({
+    queryKey: ['chapters', id],
+    queryFn: () => getChapterList(id!, 1, 100),
+    enabled: !!id,
+  });
+
+  // 删除章节
+  const deleteMutation = useMutation({
+    mutationFn: (chapterId: string) => deleteChapter(id!, chapterId),
+    onSuccess: async () => {
+      msgApi.success('章节已删除');
+      // 强制重新获取数据
+      await queryClient.refetchQueries({ queryKey: ['chapters', id] });
+    },
+    onError: (error: Error) => {
+      msgApi.error('删除失败：' + error.message);
+    },
+  });
+
+  // 更新章节状态
+  const statusMutation = useMutation({
+    mutationFn: ({ chapterId, status }: { chapterId: string; status: 'draft' | 'finalized' }) =>
+      updateChapterStatus(id!, chapterId, status),
+    onSuccess: () => {
+      msgApi.success('状态已更新');
+      queryClient.invalidateQueries({ queryKey: ['chapters', id] });
+    },
+    onError: (error: Error) => {
+      msgApi.error('更新失败：' + error.message);
+    },
+  });
+
+  // 章节表格列定义
+  const chapterColumns: ColumnsType<ChapterData> = [
+    {
+      title: '章节号',
+      dataIndex: 'chapter_number',
+      key: 'chapter_number',
+      width: 80,
+      render: (num: number) => `第${num}章`,
+    },
+    {
+      title: '标题',
+      dataIndex: 'title',
+      key: 'title',
+      ellipsis: true,
+      render: (title: string) => title || '无标题',
+    },
+    {
+      title: '字数',
+      dataIndex: 'word_count',
+      key: 'word_count',
+      width: 100,
+      render: (count: number) => count?.toLocaleString() || 0,
+    },
+    {
+      title: '状态',
+      dataIndex: 'status',
+      key: 'status',
+      width: 100,
+      render: (status: string) => {
+        const config = statusLabels[status] || statusLabels.draft;
+        return <Tag color={config.color}>{config.label}</Tag>;
+      },
+    },
+    {
+      title: '更新时间',
+      dataIndex: 'updated_at',
+      key: 'updated_at',
+      width: 180,
+      render: (date: string) => date ? new Date(date).toLocaleString() : '-',
+    },
+    {
+      title: '操作',
+      key: 'actions',
+      width: 200,
+      render: (_, record) => (
+        <Space size="small">
+          <Button
+            type="link"
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => navigate(`/editor/${id}/${record.id}`)}
+          >
+            编辑
+          </Button>
+          {record.status === 'draft' ? (
+            <Button
+              type="link"
+              size="small"
+              icon={<CheckCircleOutlined />}
+              onClick={() => statusMutation.mutate({ chapterId: record.id!, status: 'finalized' })}
+            >
+              定稿
+            </Button>
+          ) : (
+            <Button
+              type="link"
+              size="small"
+              icon={<FileOutlined />}
+              onClick={() => statusMutation.mutate({ chapterId: record.id!, status: 'draft' })}
+            >
+              撤回
+            </Button>
+          )}
+          <Popconfirm
+            title="确定删除此章节？"
+            description="删除后无法恢复"
+            onConfirm={() => deleteMutation.mutate(record.id!)}
+            okText="删除"
+            cancelText="取消"
+          >
+            <Button
+              type="link"
+              size="small"
+              danger
+              icon={<DeleteOutlined />}
+            >
+              删除
+            </Button>
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
+
+  const chapters = chaptersData?.items || [];
+
+  if (projectLoading) {
     return (
       <Layout className="project-detail-layout">
         <div className="loading-container">
@@ -58,7 +202,7 @@ export default function ProjectDetail() {
     );
   }
 
-  if (error || !project) {
+  if (projectError || !project) {
     return (
       <Layout className="project-detail-layout">
         <div className="empty-container">
@@ -134,20 +278,47 @@ export default function ProjectDetail() {
                 ),
                 children: (
                   <div className="tab-content">
-                    <div className="empty-module">
-                      <div className="module-icon chapters">
-                        <FileTextOutlined />
+                    {chapters.length === 0 && !chaptersLoading ? (
+                      <div className="empty-module">
+                        <div className="module-icon chapters">
+                          <FileTextOutlined />
+                        </div>
+                        <Title level={5}>暂无章节</Title>
+                        <Text className="module-text">开始创建你的第一章故事吧</Text>
+                        <Button
+                          type="primary"
+                          className="create-chapter-btn"
+                          onClick={() => navigate(`/editor/${id}/new`)}
+                        >
+                          <FireOutlined /> 创建第一章
+                        </Button>
                       </div>
-                      <Title level={5}>暂无章节</Title>
-                      <Text className="module-text">开始创建你的第一章故事吧</Text>
-                      <Button
-                        type="primary"
-                        className="create-chapter-btn"
-                        onClick={() => navigate(`/editor/${id}/new`)}
-                      >
-                        <FireOutlined /> 创建第一章
-                      </Button>
-                    </div>
+                    ) : (
+                      <Card className="chapter-list-card glass">
+                        <div className="chapter-list-header">
+                          <Title level={5}>
+                            <FileTextOutlined /> 章节列表
+                            <Tag color="blue" style={{ marginLeft: 8 }}>{chapters.length} 章</Tag>
+                          </Title>
+                          <Button
+                            type="primary"
+                            icon={<PlusOutlined />}
+                            onClick={() => navigate(`/editor/${id}/new`)}
+                          >
+                            新建章节
+                          </Button>
+                        </div>
+                        <Table
+                          dataSource={chapters}
+                          columns={chapterColumns}
+                          rowKey="id"
+                          loading={chaptersLoading}
+                          pagination={false}
+                          size="middle"
+                          className="chapter-table"
+                        />
+                      </Card>
+                    )}
                   </div>
                 ),
               },

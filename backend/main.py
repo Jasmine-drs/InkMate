@@ -15,6 +15,10 @@ from routers.unit import router as unit_router
 from routers.character import router as character_router
 from routers.outline import router as outline_router
 from routers.ai_generation import router as ai_router
+from routers.tracking import router as tracking_router
+from routers.chat import router as chat_router
+from routers.export import router as export_router
+from routers.settings import router as settings_router
 
 
 @asynccontextmanager
@@ -78,6 +82,10 @@ app.include_router(unit_router, prefix="/api")
 app.include_router(character_router, prefix="/api")
 app.include_router(outline_router, prefix="/api")
 app.include_router(ai_router, prefix="/api")
+app.include_router(tracking_router, prefix="/api")
+app.include_router(chat_router, prefix="/api")
+app.include_router(export_router, prefix="/api")
+app.include_router(settings_router, prefix="/api")
 
 
 @app.get("/")

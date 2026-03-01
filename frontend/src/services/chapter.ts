@@ -11,6 +11,7 @@ export interface ChapterData {
   title: string;
   content?: string;
   word_count?: number;
+  status?: string; // draft, finalized
   created_at?: string;
   updated_at?: string;
 }
@@ -33,6 +34,7 @@ export interface CreateChapterParams {
 export interface UpdateChapterParams {
   title?: string;
   content?: string;
+  status?: string; // draft, finalized
 }
 
 /**
@@ -93,6 +95,17 @@ export const updateChapter = async (
   return api.put(`/projects/${projectId}/chapters/${chapterId}`, data, {
     params: { create_version: createVersion },
   });
+};
+
+/**
+ * 更新章节状态
+ */
+export const updateChapterStatus = async (
+  projectId: string,
+  chapterId: string,
+  status: 'draft' | 'finalized'
+): Promise<ChapterData> => {
+  return updateChapter(projectId, chapterId, { status }, false);
 };
 
 /**

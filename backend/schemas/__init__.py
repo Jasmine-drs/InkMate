@@ -41,6 +41,12 @@ from .outline import (
     OutlineUpdate,
     OutlineResponse,
 )
+from .chat import (
+    ChatMessageCreate,
+    ChatMessageResponse,
+    ChatRequest,
+    ChatHistoryResponse,
+)
 
 __all__ = [
     # User
@@ -79,4 +85,9 @@ __all__ = [
     "OutlineCreate",
     "OutlineUpdate",
     "OutlineResponse",
+    # Chat
+    "ChatMessageCreate",
+    "ChatMessageResponse",
+    "ChatRequest",
+    "ChatHistoryResponse",
 ]

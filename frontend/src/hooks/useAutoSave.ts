@@ -255,31 +255,46 @@ export function useAutoSave(options: UseAutoSaveOptions): AutoSaveResult {
     [saveToLocal]
   );
 
-  // 监听内容变化，设置定时保存
+  // 定时器触发标记 - 用于追踪是否有内容变化
+  const hasChangesSinceLastSave = useRef(false);
+
+  // 监听内容变化，标记有未保存的变化
   useEffect(() => {
     if (!chapterId) return;
+    hasChangesSinceLastSave.current = true;
+
+    // 内容变化时，使用防抖保存到本地（避免频繁写入）
+    debouncedSaveToLocal();
+  }, [chapterId, content, title, debouncedSaveToLocal]);
+
+  // 独立的定时器 effect - 不依赖 content，只负责定时触发
+  useEffect(() => {
+    if (!chapterId || !onSaveToServer) return;
 
     // 清除之前的定时器
     if (saveTimerRef.current) {
       clearTimeout(saveTimerRef.current);
     }
 
-    // 内容变化时，使用防抖保存到本地（避免频繁写入）
-    debouncedSaveToLocal();
-
     // 设置定时保存到服务器
-    saveTimerRef.current = setTimeout(() => {
-      if (onSaveToServerRef.current) {
-        saveToServer();
+    saveTimerRef.current = window.setInterval(() => {
+      // 只有有变化且不在保存中时才保存
+      if (hasChangesSinceLastSave.current && !isSaving) {
+        // 检查内容是否为空
+        const currentContent = contentRef.current?.trim() || '';
+        if (currentContent.length > 0) {
+          saveToServer();
+          hasChangesSinceLastSave.current = false;
+        }
       }
     }, saveInterval);
 
     return () => {
       if (saveTimerRef.current) {
-        clearTimeout(saveTimerRef.current);
+        clearInterval(saveTimerRef.current);
       }
     };
-  }, [chapterId, content, debouncedSaveToLocal, saveInterval, saveToServer]);
+  }, [chapterId, saveInterval, saveToServer, onSaveToServer, isSaving]);
 
   // 监听恢复事件
   useEffect(() => {
