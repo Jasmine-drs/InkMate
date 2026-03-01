@@ -14,6 +14,7 @@ import OutlineList from '@/pages/OutlineList';
 import OutlineEditor from '@/pages/OutlineEditor';
 import UnitList from '@/pages/UnitList';
 import UnitEditor from '@/pages/UnitEditor';
+import TrackingList from '@/pages/TrackingList';
 
 export const router = createBrowserRouter([
   {
@@ -63,6 +64,10 @@ export const router = createBrowserRouter([
       {
         path: 'project/:id/unit/:unitId',
         element: <UnitEditor />,
+      },
+      {
+        path: 'project/:id/tracking',
+        element: <TrackingList />,
       },
     ],
   },

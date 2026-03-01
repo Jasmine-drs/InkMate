@@ -21,12 +21,14 @@ import {
   KeyOutlined,
   CloudSyncOutlined,
   FileSyncOutlined,
+  MessageOutlined,
 } from '@ant-design/icons';
 import { RichTextEditor, insertTokenToEditor, finishEditorStreaming } from '@/components/RichTextEditor';
 import { useAutoSave } from '@/hooks/useAutoSave';
-import { getChapter, updateChapter, getChapterById, createChapter, getNextChapterNumber } from '@/services/chapter';
+import { updateChapter, getChapterById, createChapter, getNextChapterNumber } from '@/services/chapter';
 import { getProject } from '@/services/project';
 import { VersionHistoryModal } from '@/components/VersionHistoryModal';
+import { AIChatModal } from '@/components/AIChatModal';
 import { continueWritingStream, type ContinueWritingOptions, StreamingError } from '@/services/ai';
 import './Editor.css';
 
@@ -44,6 +46,7 @@ export default function Editor() {
   const [versionHistoryVisible, setVersionHistoryVisible] = useState(false);
   const [isAIGenerating, setIsAIGenerating] = useState(false);
   const [projectSettings, setProjectSettings] = useState<Record<string, unknown> | undefined>(undefined);
+  const [chatModalVisible, setChatModalVisible] = useState(false);
 
   // 加载项目设定
   useEffect(() => {
@@ -376,6 +379,13 @@ export default function Editor() {
             {isAIGenerating ? '生成中...' : 'AI 续写'}
           </Button>
           <Button
+            icon={<MessageOutlined />}
+            onClick={() => setChatModalVisible(true)}
+            title="AI 对话助手"
+          >
+            AI 对话
+          </Button>
+          <Button
             className="save-btn"
             type="primary"
             icon={<SaveOutlined />}
@@ -389,23 +399,24 @@ export default function Editor() {
         </div>
       </Header>
 
-      <Content className="editor-content">
-        <div className="editor-wrapper">
-          <RichTextEditor
-            content={content}
-            onChange={setContent}
-            onSave={handleSaveNow}
-            onAIContinue={handleAIContinue}
-            projectId={projectId}
-          />
-        </div>
-      </Content>
+      <Layout className="editor-body">
+        <Content className="editor-content">
+          <div className="editor-wrapper">
+            <RichTextEditor
+              content={content}
+              onChange={setContent}
+              onSave={handleSaveNow}
+              onAIContinue={handleAIContinue}
+              projectId={projectId}
+            />
+          </div>
+        </Content>
 
-      <Sider
-        width={300}
-        theme="dark"
-        className="editor-sider"
-      >
+        <Sider
+          width={300}
+          theme="dark"
+          className="editor-sider"
+        >
         <div className="sider-content">
           <div className="sider-header">
             <span className="sider-icon">📊</span>
@@ -472,6 +483,7 @@ export default function Editor() {
           </div>
         </div>
       </Sider>
+      </Layout>
 
       {/* 版本历史 Modal */}
       {chapterId && chapterId !== 'new' && (
@@ -483,6 +495,18 @@ export default function Editor() {
           onRestore={handleRestoreVersion}
         />
       )}
+
+      {/* AI 对话助手 Modal */}
+      <AIChatModal
+        visible={chatModalVisible}
+        onClose={() => setChatModalVisible(false)}
+        projectId={projectId}
+        chapterId={chapterId && chapterId !== 'new' ? chapterId : undefined}
+        initialContext={{
+          content: content,
+          settings: projectSettings as Record<string, string> | undefined,
+        }}
+      />
     </Layout>
   );
 }

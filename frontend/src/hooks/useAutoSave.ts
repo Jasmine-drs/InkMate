@@ -141,7 +141,7 @@ export function useAutoSave(options: UseAutoSaveOptions): AutoSaveResult {
    */
   const saveToServer = useCallback(async () => {
     if (!onSaveToServerRef.current) {
-      console.warn('saveToServer: onSaveToServer callback is not provided');
+      console.warn('[AutoSave] onSaveToServer callback is not provided');
       return;
     }
 
@@ -149,6 +149,7 @@ export function useAutoSave(options: UseAutoSaveOptions): AutoSaveResult {
     try {
       setSaveStatus('saving');
       setIsSaving(true);
+      console.log('[AutoSave] 开始保存到服务器...', { title: titleRef.current?.slice(0, 20), contentLength: contentRef.current?.length });
 
       await onSaveToServerRef.current({
         title: titleRef.current,
@@ -159,11 +160,12 @@ export function useAutoSave(options: UseAutoSaveOptions): AutoSaveResult {
       setSaveStatus('saved');
       hasUnsavedChanges.current = false;
 
+      console.log('[AutoSave] 保存成功');
       message.success('保存成功');
     } catch (error) {
       setSaveStatus('error');
       const errorMsg = error instanceof Error ? error.message : String(error);
-      console.error('saveToServer error:', errorMsg);
+      console.error('[AutoSave] 保存失败:', errorMsg);
       message.error(`保存失败：${errorMsg}`);
       // 保存失败时回退到本地缓存
       saveToLocal();
@@ -269,11 +271,11 @@ export function useAutoSave(options: UseAutoSaveOptions): AutoSaveResult {
 
   // 独立的定时器 effect - 不依赖 content，只负责定时触发
   useEffect(() => {
-    if (!chapterId || !onSaveToServer) return;
+    if (!chapterId) return;
 
     // 清除之前的定时器
     if (saveTimerRef.current) {
-      clearTimeout(saveTimerRef.current);
+      clearInterval(saveTimerRef.current);
     }
 
     // 设置定时保存到服务器
@@ -282,7 +284,8 @@ export function useAutoSave(options: UseAutoSaveOptions): AutoSaveResult {
       if (hasChangesSinceLastSave.current && !isSaving) {
         // 检查内容是否为空
         const currentContent = contentRef.current?.trim() || '';
-        if (currentContent.length > 0) {
+        if (currentContent.length > 0 && onSaveToServerRef.current) {
+          console.log('[AutoSave] 定时保存触发');
           saveToServer();
           hasChangesSinceLastSave.current = false;
         }
@@ -294,7 +297,7 @@ export function useAutoSave(options: UseAutoSaveOptions): AutoSaveResult {
         clearInterval(saveTimerRef.current);
       }
     };
-  }, [chapterId, saveInterval, saveToServer, onSaveToServer, isSaving]);
+  }, [chapterId, saveInterval, saveToServer, isSaving]);
 
   // 监听恢复事件
   useEffect(() => {

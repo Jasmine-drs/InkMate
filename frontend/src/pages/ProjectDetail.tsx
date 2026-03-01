@@ -2,9 +2,10 @@
  * 项目详情页 - 重构版
  * 墨蓝色主题 + 玻璃态卡片
  */
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Layout, Typography, Spin, Card, Button, Tabs, Tag, Table, Space, Popconfirm, App } from 'antd';
+import { Layout, Typography, Spin, Card, Button, Tabs, Tag, Table, Space, Popconfirm, App, Dropdown, MenuProps } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
   ArrowLeftOutlined,
@@ -20,9 +21,15 @@ import {
   CheckCircleOutlined,
   FileOutlined,
   PlusOutlined,
+  DownloadOutlined,
+  FileWordOutlined,
+  FilePdfOutlined,
+  FileTextOutlined as FileTextIcon,
+  LineChartOutlined,
 } from '@ant-design/icons';
 import { getProject } from '@/services/project';
 import { getChapterList, deleteChapter, updateChapterStatus, type ChapterData } from '@/services/chapter';
+import { exportToTxt, exportToEpub, exportToDocx, triggerDownload } from '@/services/export';
 import { ROUTES } from '@/pages/SettingsEditor';
 import './ProjectDetail.css';
 
@@ -55,6 +62,8 @@ export default function ProjectDetail() {
   const queryClient = useQueryClient();
   const { message: msgApi } = App.useApp();
 
+  const [isExporting, setIsExporting] = useState(false);
+
   // 获取项目信息
   const { data: project, isLoading: projectLoading, error: projectError } = useQuery({
     queryKey: ['project', id],
@@ -68,6 +77,68 @@ export default function ProjectDetail() {
     queryFn: () => getChapterList(id!, 1, 100),
     enabled: !!id,
   });
+
+  // 导出处理函数
+  const handleExport = async (format: 'txt' | 'epub' | 'docx') => {
+    if (!id || !project) return;
+
+    setIsExporting(true);
+    const hide = msgApi.loading(`正在生成 ${format.toUpperCase()} 文件...`, 0);
+
+    try {
+      let url: string;
+      let filename: string;
+
+      switch (format) {
+        case 'txt':
+          url = await exportToTxt(id);
+          filename = `${project.title}.txt`;
+          break;
+        case 'epub':
+          url = await exportToEpub(id);
+          filename = `${project.title}.epub`;
+          break;
+        case 'docx':
+          url = await exportToDocx(id);
+          filename = `${project.title}.docx`;
+          break;
+        default:
+          throw new Error('不支持的导出格式');
+      }
+
+      hide();
+      triggerDownload(url, filename);
+      msgApi.success(`导出成功！已开始下载 ${filename}`);
+    } catch (error: unknown) {
+      hide();
+      const errorMessage = error instanceof Error ? error.message : '导出失败';
+      msgApi.error(`导出失败：${errorMessage}`);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // 导出菜单项
+  const exportMenuItems: MenuProps['items'] = [
+    {
+      key: 'txt',
+      icon: <FileTextIcon />,
+      label: '导出为 TXT',
+      onClick: () => handleExport('txt'),
+    },
+    {
+      key: 'epub',
+      icon: <FilePdfOutlined />,
+      label: '导出为 EPUB',
+      onClick: () => handleExport('epub'),
+    },
+    {
+      key: 'docx',
+      icon: <FileWordOutlined />,
+      label: '导出为 DOCX',
+      onClick: () => handleExport('docx'),
+    },
+  ];
 
   // 删除章节
   const deleteMutation = useMutation({
@@ -247,6 +318,23 @@ export default function ProjectDetail() {
             </div>
           </div>
         </div>
+        <div className="header-right">
+          <Space>
+            <Dropdown
+              menu={{ items: exportMenuItems }}
+              disabled={isExporting || chapters.length === 0}
+            >
+              <Button
+                icon={<DownloadOutlined />}
+                loading={isExporting}
+                disabled={chapters.length === 0}
+              >
+                导出
+                {chapters.length > 0 && ` (${chapters.length}章)`}
+              </Button>
+            </Dropdown>
+          </Space>
+        </div>
       </Header>
 
       {/* 主要内容 */}
@@ -425,6 +513,33 @@ export default function ProjectDetail() {
                         onClick={() => navigate(`/project/${id}/units`)}
                       >
                         <FolderOutlined /> 管理单元
+                      </Button>
+                    </div>
+                  </div>
+                ),
+              },
+              {
+                key: 'tracking',
+                label: (
+                  <div className="tab-label">
+                    <LineChartOutlined />
+                    <span>状态追踪</span>
+                  </div>
+                ),
+                children: (
+                  <div className="tab-content">
+                    <div className="empty-module">
+                      <div className="module-icon tracking">
+                        <LineChartOutlined />
+                      </div>
+                      <Title level={5}>暂无追踪记录</Title>
+                      <Text className="module-text">追踪角色状态、伏笔、物品和时间线</Text>
+                      <Button
+                        type="primary"
+                        className="create-tracking-btn"
+                        onClick={() => navigate(`/project/${id}/tracking`)}
+                      >
+                        <LineChartOutlined /> 管理追踪
                       </Button>
                     </div>
                   </div>
