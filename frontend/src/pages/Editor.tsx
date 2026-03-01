@@ -1,7 +1,7 @@
 /**
  * 章节编辑器页面 - TipTap 富文本编辑器
  */
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Layout,
@@ -22,13 +22,12 @@ import {
   CloudSyncOutlined,
   FileSyncOutlined,
 } from '@ant-design/icons';
-import { RichTextEditor } from '@/components/RichTextEditor';
+import { RichTextEditor, insertTokenToEditor, finishEditorStreaming } from '@/components/RichTextEditor';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { getChapter, updateChapter, getChapterById, createChapter, getNextChapterNumber } from '@/services/chapter';
 import { getProject } from '@/services/project';
 import { VersionHistoryModal } from '@/components/VersionHistoryModal';
-import { continueWritingStream, type ContinueWritingOptions } from '@/services/ai';
-import { ROUTES } from '@/pages/SettingsEditor';
+import { continueWritingStream, type ContinueWritingOptions, StreamingError } from '@/services/ai';
 import './Editor.css';
 
 const { Header, Content, Sider } = Layout;
@@ -41,9 +40,7 @@ export default function Editor() {
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [_loading, setLoading] = useState(false);
   const [wordCount, setWordCount] = useState(0);
-  const [_isNewChapter, setIsNewChapter] = useState(false);
   const [versionHistoryVisible, setVersionHistoryVisible] = useState(false);
   const [isAIGenerating, setIsAIGenerating] = useState(false);
   const [projectSettings, setProjectSettings] = useState<Record<string, unknown> | undefined>(undefined);
@@ -64,8 +61,9 @@ export default function Editor() {
     loadProjectSettings();
   }, [projectId]);
 
-  // 自动保存 Hook
-  const [createdChapterId, setCreatedChapterId] = useState<string | undefined>(undefined);
+  // 自动保存 Hook - 使用 refs 避免竞态条件
+  const createdChapterIdRef = useRef<string | undefined>(undefined);
+  const isCreatingRef = useRef(false);
 
   const {
     isSaving,
@@ -76,7 +74,7 @@ export default function Editor() {
     clearLocalDraft,
     saveStatus,
   } = useAutoSave({
-    chapterId: chapterId && chapterId !== 'new' ? chapterId : createdChapterId,
+    chapterId: chapterId && chapterId !== 'new' ? chapterId : createdChapterIdRef.current,
     projectId: projectId,
     saveInterval: 30000, // 30 秒自动保存
     content,
@@ -88,29 +86,38 @@ export default function Editor() {
 
       // 如果是新建章节，使用创建接口
       if (!chapterId || chapterId === 'new') {
-        if (!createdChapterId) {
-          // 获取下一个可用章节号
-          const chapterNum = await getNextChapterNumber(projectId);
-          const result = await createChapter(projectId, {
-            chapter_number: chapterNum,
-            title,
-            content: content || '',
-          });
-          if (result && result.id) {
-            setCreatedChapterId(result.id);
-            // 更新 URL 为新章节 ID
-            navigate(`/editor/${projectId}/${result.id}`, { replace: true });
-            return; // 新建成功直接返回，后续逻辑由 Hook 处理
+        // 使用 ref 避免竞态条件
+        if (!createdChapterIdRef.current && !isCreatingRef.current) {
+          // 添加创建锁，防止重复创建
+          isCreatingRef.current = true;
+          try {
+            // 获取下一个可用章节号
+            const chapterNum = await getNextChapterNumber(projectId);
+            const result = await createChapter(projectId, {
+              chapter_number: chapterNum,
+              title,
+              content: content || '',
+            });
+            if (result && result.id) {
+              createdChapterIdRef.current = result.id;
+              // 更新 URL 为新章节 ID
+              navigate(`/editor/${projectId}/${result.id}`, { replace: true });
+              return; // 新建成功直接返回，后续逻辑由 Hook 处理
+            }
+          } finally {
+            isCreatingRef.current = false;
           }
-        } else {
+        } else if (createdChapterIdRef.current) {
           // 已经有 ID 了，更新章节
-          await updateChapter(projectId, createdChapterId, { title, content }, true);
+          await updateChapter(projectId, createdChapterIdRef.current, { title, content }, true);
         }
+        // 如果正在创建中，跳过本次保存（避免竞态）
+        return;
       } else {
         // 更新现有章节
         await updateChapter(projectId, chapterId, { title, content }, true);
       }
-    }, [projectId, chapterId, createdChapterId, navigate]),
+    }, [projectId, chapterId, navigate]),
   });
 
   // 加载章节数据
@@ -120,13 +127,11 @@ export default function Editor() {
 
       // 如果是新建章节
       if (!chapterId || chapterId === 'new') {
-        setIsNewChapter(true);
         setTitle('');
         setContent('');
         return;
       }
 
-      setLoading(true);
       try {
         // 尝试通过 ID 获取章节（chapterId 可能是数字或 UUID）
         let chapter;
@@ -140,13 +145,10 @@ export default function Editor() {
         if (chapter) {
           setTitle(chapter.title);
           setContent(chapter.content || '');
-          setIsNewChapter(false);
         }
       } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : '加载章节失败';
         message.error('加载章节失败，' + errorMessage);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -173,7 +175,7 @@ export default function Editor() {
   }, [content]);
 
   const handleAIContinue = async () => {
-    if (!content) {
+    if (wordCount === 0) {
       message.warning('请先输入一些内容再续写');
       return;
     }
@@ -191,17 +193,45 @@ export default function Editor() {
       if (projectSettings) {
         options.settings = projectSettings as Record<string, string | undefined>;
       }
-      // TODO: 添加大纲和角色信息的传递
 
       await continueWritingStream(content, (token) => {
-        setContent((prev) => prev + token);
+        // 使用编辑器的流式插入方法，而不是通过 React state
+        insertTokenToEditor(token);
       }, options);
+
+      // 完成流式输入
+      finishEditorStreaming();
+
       hide();
       message.success('AI 续写完成');
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'AI 续写失败';
       hide();
-      message.error('AI 续写失败：' + errorMessage);
+
+      // 根据错误类型显示不同的提示信息
+      if (error instanceof StreamingError) {
+        switch (error.type) {
+          case 'aborted':
+            // 用户主动中断，不清理内容，保留已生成部分
+            message.info('AI 生成已取消');
+            break;
+          case 'network':
+            // 网络错误，提示用户检查网络
+            message.error('网络连接中断，请检查网络后重试');
+            break;
+          case 'server':
+            // 服务器错误
+            message.error(`服务器错误：${error.message}`);
+            break;
+          case 'parse':
+            // 解析错误，保留已生成内容
+            message.warning('数据解析异常，已保留已生成内容');
+            break;
+          default:
+            message.error('AI 续写失败：' + error.message);
+        }
+      } else {
+        message.error('AI 续写失败：' + (error instanceof Error ? error.message : '未知错误'));
+      }
     } finally {
       setIsAIGenerating(false);
     }
@@ -228,6 +258,25 @@ export default function Editor() {
 
   // 处理版本恢复
   const handleRestoreVersion = async (versionNum: number, versionContent: string) => {
+    // 检查是否有未保存的修改
+    const currentContentTrimmed = content.trim();
+    const versionContentTrimmed = versionContent.trim();
+
+    if (currentContentTrimmed !== versionContentTrimmed && currentContentTrimmed.length > 0) {
+      // 当前内容与版本内容不同，提示用户
+      const confirmed = await new Promise<boolean>((resolve) => {
+        if (window.confirm('当前内容有未保存的修改，恢复版本将覆盖这些修改。确定要继续吗？')) {
+          resolve(true);
+        } else {
+          resolve(false);
+        }
+      });
+
+      if (!confirmed) {
+        return;
+      }
+    }
+
     // 恢复版本内容
     setContent(versionContent);
 
@@ -266,7 +315,7 @@ export default function Editor() {
     <Layout className="editor-layout">
       <Header className="editor-header">
         <div className="header-left">
-          <Button icon={<ArrowLeftOutlined />} onClick={() => projectId && navigate(ROUTES.PROJECT_DETAIL(projectId))}>
+          <Button icon={<ArrowLeftOutlined />} onClick={() => projectId && navigate(`/project/${projectId}`)}>
             返回
           </Button>
           <Divider type="vertical" className="header-divider" />
@@ -353,6 +402,7 @@ export default function Editor() {
             onChange={setContent}
             onSave={handleSaveNow}
             onAIContinue={handleAIContinue}
+            projectId={projectId}
           />
         </div>
       </Content>

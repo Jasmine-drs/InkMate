@@ -78,13 +78,7 @@ export const getChapterById = async (
   projectId: string,
   chapterId: string
 ): Promise<ChapterData> => {
-  // 先获取列表找到章节
-  const result = await getChapterList(projectId, 1, 100);
-  const chapter = result.items.find((c) => c.id === chapterId);
-  if (!chapter) {
-    throw new Error('章节不存在');
-  }
-  return chapter;
+  return api.get(`/projects/${projectId}/chapters/by-id/${chapterId}`);
 };
 
 /**

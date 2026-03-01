@@ -102,10 +102,12 @@ class ChapterService:
         for key, value in update_data.items():
             setattr(chapter, key, value)
 
-        # 更新字数统计 - 使用纯文本字数（移除 HTML 标签）
+        # 更新字数统计 - 使用与前端一致的逻辑（使用 html.parser 模拟 textContent 行为）
         if chapter.content:
+            from html import unescape
+            # 移除 HTML 标签并解码 HTML 实体，模拟浏览器 textContent 行为
             import re
-            text_content = re.sub(r'<[^>]+>', '', chapter.content)
+            text_content = unescape(re.sub(r'<[^>]+>', ' ', chapter.content))
             chapter.word_count = len(text_content)
 
         await self.db.commit()

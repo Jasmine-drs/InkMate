@@ -169,12 +169,27 @@ export interface ContinueWritingOptions {
   characters?: string;   // 角色信息
 }
 
+/**
+ * 流式生成错误类型
+ */
+export class StreamingError extends Error {
+  type: 'network' | 'parse' | 'server' | 'aborted';
+
+  constructor(type: 'network' | 'parse' | 'server' | 'aborted', message: string) {
+    super(message);
+    this.type = type;
+    this.name = 'StreamingError';
+  }
+}
+
 export const continueWritingStream = async (
   content: string,
   onToken: (token: string) => void,
   options?: ContinueWritingOptions
 ): Promise<string> => {
   const token = localStorage.getItem('access_token');
+  let fullContent = '';
+  let buffer = '';
 
   try {
     const response = await fetch('/api/ai/continue/stream', {
@@ -194,17 +209,24 @@ export const continueWritingStream = async (
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`HTTP error! status: ${response.status}, ${errorText}`);
+      // 区分服务器错误类型
+      if (response.status === 401) {
+        throw new StreamingError('server', '认证失败，请重新登录');
+      } else if (response.status === 403) {
+        throw new StreamingError('server', '无权访问此资源');
+      } else if (response.status >= 500) {
+        throw new StreamingError('server', `服务器错误 (${response.status})`);
+      } else {
+        throw new StreamingError('server', `请求失败 (${response.status}): ${errorText}`);
+      }
     }
 
     const reader = response.body?.getReader();
     if (!reader) {
-      throw new Error('ReadableStream not supported');
+      throw new StreamingError('network', '浏览器不支持流式读取');
     }
 
     const decoder = new TextDecoder();
-    let fullContent = '';
-    let buffer = '';
 
     while (true) {
       const { done, value } = await reader.read();
@@ -233,7 +255,8 @@ export const continueWritingStream = async (
                 onToken(unescapedToken);
               }
             } catch (e) {
-              // 忽略解析错误
+              // 解析错误，继续处理后续 token
+              console.warn('Token 解析失败:', e);
             }
           }
         }
@@ -242,6 +265,22 @@ export const continueWritingStream = async (
 
     return fullContent;
   } catch (error) {
-    throw error;
+    // 网络错误或中断时，清理不完整的内容
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new StreamingError('network', '网络连接中断，请检查网络后重试');
+    }
+
+    // 如果是 AbortError，表示用户主动中断
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new StreamingError('aborted', '生成已取消');
+    }
+
+    // 重新抛出已处理的错误
+    if (error instanceof StreamingError) {
+      throw error;
+    }
+
+    // 其他错误
+    throw new StreamingError('network', `流式生成失败：${error instanceof Error ? error.message : '未知错误'}`);
   }
 };

@@ -239,3 +239,19 @@ async def get_chapter_version(
             detail="版本不存在"
         )
     return version
+
+
+@router.get("/by-id/{chapter_id}", response_model=ChapterResponse, summary="根据 ID 获取章节")
+async def get_chapter_by_id(
+    project_id: str,
+    chapter_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """根据章节 UUID 获取内容"""
+    await get_project_with_auth(project_id, db, current_user)
+    service = ChapterService(db)
+    chapter = await service.get_chapter_by_id(chapter_id)
+    if not chapter or chapter.project_id != project_id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="章节不存在")
+    return chapter

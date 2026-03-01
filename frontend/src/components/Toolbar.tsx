@@ -9,7 +9,7 @@ import {
   ItalicOutlined,
   UnderlineOutlined,
   StrikethroughOutlined,
-  FieldTimeOutlined,
+  MessageOutlined,
   UnorderedListOutlined,
   OrderedListOutlined,
   BlockOutlined,
@@ -22,9 +22,10 @@ interface ToolbarProps {
   onSave: () => void;
   onAIContinue: () => void;
   isEmpty?: boolean;
+  projectId?: string;
 }
 
-export function Toolbar({ editor, onSave, onAIContinue, isEmpty = false }: ToolbarProps) {
+export function Toolbar({ editor, onSave, onAIContinue, isEmpty = false, projectId }: ToolbarProps) {
   return (
     <div className="editor-toolbar">
       <Space size="small" wrap>
@@ -139,7 +140,7 @@ export function Toolbar({ editor, onSave, onAIContinue, isEmpty = false }: Toolb
           <Button
             type={editor.isActive('blockquote') ? 'primary' : 'default'}
             size="small"
-            icon={<FieldTimeOutlined />}
+            icon={<MessageOutlined />}
             onClick={() => editor.chain().focus().toggleBlockquote().run()}
             className={editor.isActive('blockquote') ? 'active-btn' : ''}
           />
@@ -166,7 +167,7 @@ export function Toolbar({ editor, onSave, onAIContinue, isEmpty = false }: Toolb
             size="small"
             icon={<SaveOutlined />}
             onClick={onSave}
-            disabled={isEmpty}
+            disabled={!projectId || isEmpty}
             className="save-btn"
           >
             保存

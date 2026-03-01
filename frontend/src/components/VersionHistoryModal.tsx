@@ -59,7 +59,6 @@ export function VersionHistoryModal({
   const [versions, setVersions] = useState<VersionData[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedVersion, setSelectedVersion] = useState<VersionData | null>(null);
-  const [_comparing, setComparing] = useState(false);
 
   // 加载版本历史
   useEffect(() => {
@@ -89,13 +88,8 @@ export function VersionHistoryModal({
 
   const handleCompare = async () => {
     if (!selectedVersion) return;
-    setComparing(true);
-    try {
-      // TODO: 实现版本对比功能
-      message.info('版本对比功能开发中...');
-    } finally {
-      setComparing(false);
-    }
+    // TODO: 实现版本对比功能
+    message.info('版本对比功能开发中...');
   };
 
   const handleRestore = () => {

@@ -41,7 +41,13 @@ interface AutoSaveResult {
 /**
  * 获取本地缓存 key
  */
-const getStorageKey = (chapterId: string) => `draft_chapter_${chapterId}`;
+const getStorageKey = (chapterId: string, projectId?: string) => {
+  // 当 chapterId 为'new'时，使用 projectId 生成临时 key，避免多个新建章节共享同一缓存
+  if (chapterId === 'new' && projectId) {
+    return `draft_chapter_new_${projectId}`;
+  }
+  return `draft_chapter_${chapterId}`;
+};
 
 /**
  * 解析本地缓存数据
@@ -94,6 +100,12 @@ export function useAutoSave(options: UseAutoSaveOptions): AutoSaveResult {
   const saveTimerRef = useRef<number | null>(null);
   const hasUnsavedChanges = useRef(false);
 
+  // 使用 ref 存储回调的最新引用，避免闭包问题
+  const onSaveToServerRef = useRef(onSaveToServer);
+  useEffect(() => {
+    onSaveToServerRef.current = onSaveToServer;
+  }, [onSaveToServer]);
+
   // 更新 refs
   useEffect(() => {
     contentRef.current = content;
@@ -116,7 +128,7 @@ export function useAutoSave(options: UseAutoSaveOptions): AutoSaveResult {
     };
 
     try {
-      localStorage.setItem(getStorageKey(idToUse), JSON.stringify(draftData));
+      localStorage.setItem(getStorageKey(idToUse, projectId), JSON.stringify(draftData));
       return true;
     } catch (error) {
       // 本地保存失败时静默处理，返回 false
@@ -128,7 +140,7 @@ export function useAutoSave(options: UseAutoSaveOptions): AutoSaveResult {
    * 保存到服务器
    */
   const saveToServer = useCallback(async () => {
-    if (!onSaveToServer) {
+    if (!onSaveToServerRef.current) {
       console.warn('saveToServer: onSaveToServer callback is not provided');
       return;
     }
@@ -138,7 +150,7 @@ export function useAutoSave(options: UseAutoSaveOptions): AutoSaveResult {
       setSaveStatus('saving');
       setIsSaving(true);
 
-      await onSaveToServer({
+      await onSaveToServerRef.current({
         title: titleRef.current,
         content: contentRef.current,
       });
@@ -158,7 +170,7 @@ export function useAutoSave(options: UseAutoSaveOptions): AutoSaveResult {
     } finally {
       setIsSaving(false);
     }
-  }, [onSaveToServer, saveToLocal]);
+  }, [saveToLocal]);
 
   /**
    * 立即保存（先本地，后服务器）
@@ -195,7 +207,7 @@ export function useAutoSave(options: UseAutoSaveOptions): AutoSaveResult {
     if (!chapterId) return;
 
     try {
-      const saved = localStorage.getItem(getStorageKey(chapterId));
+      const saved = localStorage.getItem(getStorageKey(chapterId, projectId));
       if (saved) {
         const draft = JSON.parse(saved) as DraftData;
         // 触发内容更新（通过自定义事件）
@@ -207,23 +219,23 @@ export function useAutoSave(options: UseAutoSaveOptions): AutoSaveResult {
     } catch (error) {
       message.error('恢复草稿失败');
     }
-  }, [chapterId]);
+  }, [chapterId, projectId]);
 
   /**
    * 清除本地缓存
    */
   const clearLocalDraft = useCallback(() => {
     if (!chapterId) return;
-    localStorage.removeItem(getStorageKey(chapterId));
+    localStorage.removeItem(getStorageKey(chapterId, projectId));
     message.success('本地草稿已清除');
-  }, [chapterId]);
+  }, [chapterId, projectId]);
 
   /**
    * 检查是否有本地草稿
    */
   const checkLocalDraft = useCallback(() => {
     if (!chapterId) return false;
-    const saved = localStorage.getItem(getStorageKey(chapterId));
+    const saved = localStorage.getItem(getStorageKey(chapterId, projectId));
     if (!saved) return false;
 
     try {
@@ -233,7 +245,7 @@ export function useAutoSave(options: UseAutoSaveOptions): AutoSaveResult {
     } catch {
       return false;
     }
-  }, [chapterId]);
+  }, [chapterId, projectId]);
 
   // 使用防抖的 saveToLocal，避免每次输入都保存
   const debouncedSaveToLocal = useCallback(
@@ -257,7 +269,7 @@ export function useAutoSave(options: UseAutoSaveOptions): AutoSaveResult {
 
     // 设置定时保存到服务器
     saveTimerRef.current = setTimeout(() => {
-      if (onSaveToServer) {
+      if (onSaveToServerRef.current) {
         saveToServer();
       }
     }, saveInterval);
@@ -267,7 +279,7 @@ export function useAutoSave(options: UseAutoSaveOptions): AutoSaveResult {
         clearTimeout(saveTimerRef.current);
       }
     };
-  }, [chapterId, content, debouncedSaveToLocal, saveToServer, saveInterval, onSaveToServer]);
+  }, [chapterId, content, debouncedSaveToLocal, saveInterval, saveToServer]);
 
   // 监听恢复事件
   useEffect(() => {
