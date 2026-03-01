@@ -25,6 +25,7 @@ import {
 import { RichTextEditor } from '@/components/RichTextEditor';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { getChapter, updateChapter, getChapterById } from '@/services/chapter';
+import { VersionHistoryModal } from '@/components/VersionHistoryModal';
 import './Editor.css';
 
 const { Header, Content, Sider } = Layout;
@@ -39,6 +40,7 @@ export default function Editor() {
   const [_loading, setLoading] = useState(false);
   const [wordCount, setWordCount] = useState(0);
   const [_isNewChapter, setIsNewChapter] = useState(false);
+  const [versionHistoryVisible, setVersionHistoryVisible] = useState(false);
 
   // 自动保存 Hook
   const {
@@ -142,6 +144,26 @@ export default function Editor() {
   const handleAIContinue = () => {
     // TODO: AI 续写功能
     message.info('AI 续写功能开发中...');
+  };
+
+  // 处理版本恢复
+  const handleRestoreVersion = async (versionNum: number, versionContent: string) => {
+    // 恢复版本内容
+    setContent(versionContent);
+
+    // 保存恢复后的内容为一个新版本
+    if (projectId && chapterId && chapterId !== 'new') {
+      try {
+        await updateChapter(projectId, chapterId, {
+          title,
+          content: versionContent
+        }, true);
+        message.success(`已恢复到版本 ${versionNum} 并保存为新版本`);
+      } catch (error: any) {
+        console.error('恢复版本失败:', error);
+        message.error('恢复版本失败');
+      }
+    }
   };
 
   return (
@@ -295,12 +317,27 @@ export default function Editor() {
             <Button className="quick-btn" block>
               👥 查看出场角色
             </Button>
-            <Button className="quick-btn" block>
+            <Button
+              className="quick-btn"
+              block
+              onClick={() => setVersionHistoryVisible(true)}
+            >
               📜 查看版本历史
             </Button>
           </div>
         </div>
       </Sider>
+
+      {/* 版本历史 Modal */}
+      {chapterId && chapterId !== 'new' && (
+        <VersionHistoryModal
+          visible={versionHistoryVisible}
+          projectId={projectId!}
+          chapterId={chapterId}
+          onClose={() => setVersionHistoryVisible(false)}
+          onRestore={handleRestoreVersion}
+        />
+      )}
     </Layout>
   );
 }
