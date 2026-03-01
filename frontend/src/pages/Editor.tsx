@@ -98,12 +98,9 @@ export default function Editor() {
               title,
               content: content || '',
             });
-            console.log('[DEBUG] createChapter result:', JSON.stringify(result, null, 2));
-            console.log('[DEBUG] result.id:', result?.id, 'type:', typeof result?.id);
             if (result && result.id) {
               createdChapterIdRef.current = result.id;
               // 更新 URL 为新章节 ID
-              console.log('[DEBUG] navigating to:', `/editor/${projectId}/${result.id}`);
               navigate(`/editor/${projectId}/${result.id}`, { replace: true });
               return; // 新建成功直接返回，后续逻辑由 Hook 处理
             }
