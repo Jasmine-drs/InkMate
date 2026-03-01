@@ -24,8 +24,10 @@ import {
   BookOutlined,
   UserOutlined,
   EnvironmentOutlined,
+  RobotOutlined,
 } from '@ant-design/icons';
 import { getProject, updateProject } from '@/services/project';
+import { generate } from '@/services/ai';
 import './SettingsEditor.css';
 
 const { Header, Content } = Layout;
@@ -169,6 +171,37 @@ export default function SettingsEditor() {
       }
     } finally {
       setSaving(false);
+    }
+  };
+
+  // AI 辅助生成设定
+  const handleAIGenerate = async (field: string) => {
+    const fieldLabels: Record<string, string> = {
+      worldView: '世界观',
+      timeSetting: '时代设定',
+      locationSetting: '地点设定',
+      powerSystem: '力量体系',
+      magic: '魔法设定',
+      socialStructure: '社会结构',
+      technology: '科技水平',
+      culture: '文化习俗',
+      history: '历史背景',
+      creatures: '生物种族',
+      other: '其他设定',
+    };
+
+    const prompt = `请为小说创作${fieldLabels[field] || field}，要求内容丰富多彩，适合奇幻小说使用。`;
+
+    try {
+      const result = await generate({ prompt, system_prompt: '你是一个专业的奇幻小说设定创作助手，请创作引人入胜的世界观设定。' });
+      if (result.content) {
+        form.setFieldValue(field, result.content);
+        setHasUnsavedChanges(true);
+        message.success(`${fieldLabels[field]} 已生成`);
+      }
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : '生成失败';
+      message.error('AI 生成失败：' + errorMessage);
     }
   };
 
