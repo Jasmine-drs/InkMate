@@ -11,22 +11,22 @@
 
 :root {
   /* ========================================
-     主色调 - 墨蓝色系
+     主色调 - 墨蓝色系 (Design System)
      ======================================== */
-  --ink-900: #0A0E1A;      /* 最深墨蓝 - 主背景 */
-  --ink-800: #0F1425;      /* 深墨蓝 - 卡片背景 */
-  --ink-700: #151B35;      /* 墨蓝 - 侧边栏 */
-  --ink-600: #1A2345;      /* 次墨蓝 - 悬停 */
-  --ink-500: #25305C;      /* 中墨蓝 - 边框 */
-  --ink-400: #3A456B;      /* 浅墨蓝 - 悬停边框 */
+  --ink-900: #060E1A;      /* 深墨蓝 - 页面大背景 */
+  --ink-800: #142136;      /* 面板蓝 - 编辑器/侧边栏/卡片背景 */
+  --ink-700: #1A2A4A;      /* 墨蓝 - 悬停背景 */
+  --ink-600: #203359;      /* 次墨蓝 - 边框 */
+  --ink-500: #2A3D66;      /* 中墨蓝 - 分割线 */
+  --ink-400: #3A4F7A;      /* 浅墨蓝 - 悬停边框 */
 
   /* ========================================
-     强调色 - 暖橙色系
+     强调色 - 暖橙色系 (Design System)
      ======================================== */
-  --orange-600: #F97316;   /* 主橙色 - CTA */
-  --orange-500: #FB923C;   /* 浅橙 - 悬停 */
-  --orange-400: #FDBA74;   /* 淡橙 - 高亮 */
-  --amber-500: #F59E0B;    /* 琥珀色 - 警告/提示 */
+  --orange-600: #E67E22;   /* 落日橙 - 主按钮/AI 状态 */
+  --orange-500: #FF9F43;   /* 暖金 - Hover 状态 */
+  --orange-400: #FFB366;   /* 淡橙 - 高亮 */
+  --amber-500: #F39C12;    /* 琥珀色 - 警告/提示 */
 
   /* ========================================
      中性色
@@ -42,63 +42,64 @@
   --slate-100: #F1F5F9;
 
   /* ========================================
-     功能色
+     功能色 (Design System)
      ======================================== */
-  --success: #10B981;
-  --error: #EF4444;
-  --warning: #F59E0B;
-  --info: #3B82F6;
+  --success: #1ABC9C;      /* 极光青 - 成功状态 */
+  --error: #E74C3C;        /* 红色 - 错误状态 */
+  --warning: #F39C12;      /* 琥珀色 - 警告状态 */
+  --info: #3498DB;         /* 科技蓝 - 链接/加载状态 */
 
   /* ========================================
-     文字颜色
+     文字颜色 (Design System)
      ======================================== */
-  --text-primary: #F8FAFC;
-  --text-secondary: #CBD5E1;
-  --text-tertiary: #94A3B8;
-  --text-disabled: #475569;
+  --text-primary: #FFFFFF;     /* 极简白 - 一级标题 */
+  --text-secondary: #ECF0F1;   /* 亮白 - 正文标题 */
+  --text-tertiary: #A0AEC0;    /* 冷灰蓝 - 正文/说明文字 */
+  --text-disabled: #4A5568;    /* 深灰 - 禁用文字 */
 
   /* ========================================
-     背景色
+     背景色 (Design System)
      ======================================== */
-  --bg-primary: #0A0E1A;
-  --bg-secondary: #0F1425;
-  --bg-tertiary: #151B35;
-  --bg-elevated: #1A2345;
-  --bg-glass: rgba(21, 27, 53, 0.8);
+  --bg-primary: #060E1A;       /* 深墨蓝 - 页面大背景 */
+  --bg-secondary: #142136;     /* 面板蓝 - 卡片/侧边栏 */
+  --bg-tertiary: #1A2A4A;      /* 深墨蓝 - 悬停 */
+  --bg-elevated: #203359;      /* 次墨蓝 - 弹窗 */
+  --bg-glass: rgba(20, 33, 54, 0.85);  /* 玻璃态 */
 
   /* ========================================
-     边框色
+     边框色 (Design System)
      ======================================== */
-  --border-primary: #1E293B;
-  --border-secondary: #334155;
-  --border-light: rgba(148, 165, 191, 0.1);
+  --border-primary: rgba(255, 255, 255, 0.08);   /* 分割线标准 */
+  --border-secondary: rgba(255, 255, 255, 0.12); /* 输入框边框 */
+  --border-light: rgba(255, 255, 255, 0.06);     /* 轻微边框 */
 
   /* ========================================
-     阴影 (Dimensional Layering)
+     阴影 (Design System - Dimensional Layering)
      ======================================== */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
-  --shadow-glow: 0 0 20px rgba(249, 115, 22, 0.3);
-  --shadow-glow-orange: 0 0 30px rgba(249, 115, 22, 0.4);
+  --shadow-glow: 0 0 20px rgba(230, 126, 34, 0.25);     /* 橙色光晕 */
+  --shadow-glow-orange: 0 0 30px rgba(230, 126, 34, 0.35);
+  --shadow-glow-blue: 0 0 20px rgba(52, 152, 219, 0.25); /* 蓝色光晕 */
 
   /* ========================================
-     圆角
+     圆角 (Design System)
      ======================================== */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 20px;
-  --radius-2xl: 28px;
+  --radius-sm: 8px;          /* 小组件：按钮、输入框 */
+  --radius-md: 12px;         /* 中等卡片 */
+  --radius-lg: 16px;         /* 大卡片 */
+  --radius-xl: 20px;         /* 弹窗 */
+  --radius-2xl: 24px;        /* 大圆角卡片 */
 
   /* ========================================
-     动画 (Motion-Driven)
+     动画 (Design System - Motion-Driven)
      ======================================== */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-bounce: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);   /* 微交互 */
+  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);   /* 标准过渡 */
+  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);   /* 慢动画 */
+  --transition-bounce: 500ms cubic-bezier(0.34, 1.56, 0.64, 1); /* 弹性动画 */
 
   /* ========================================
      字体
@@ -302,13 +303,13 @@ body {
 }
 
 /* ========================================
-   按钮基础样式
+   按钮基础样式 (Design System)
    ======================================== */
 .btn-primary {
   background: linear-gradient(135deg, var(--orange-600) 0%, var(--orange-500) 100%);
   color: white;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   padding: 10px 20px;
   font-weight: 500;
   cursor: pointer;
@@ -326,14 +327,22 @@ body {
 }
 
 /* ========================================
-   渐变背景
+   渐变背景 (Design System)
    ======================================== */
 .gradient-ink {
   background: linear-gradient(135deg, var(--ink-900) 0%, var(--ink-700) 100%);
 }
 
 .gradient-orange {
-  background: linear-gradient(135deg, var(--orange-600) 0%, var(--amber-500) 100%);
+  background: linear-gradient(135deg, var(--orange-600) 0%, var(--orange-500) 100%);
+}
+
+.gradient-blue {
+  background: linear-gradient(135deg, var(--info) 0%, #2980B9 100%);
+}
+
+.gradient-cyan {
+  background: linear-gradient(135deg, var(--success) 0%, #16A085 100%);
 }
 
 /* ========================================
@@ -359,25 +368,25 @@ body {
 }
 
 /* ========================================
-   Ant Design 深色主题覆盖
+   Ant Design 深色主题覆盖 (Design System)
    ======================================== */
 
 /* 全局 Modal 样式 */
 .ant-modal {
-  background: linear-gradient(135deg, rgba(15, 20, 37, 0.98) 0%, rgba(21, 27, 53, 0.98) 100%);
-  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(6, 14, 26, 0.98) 0%, rgba(20, 33, 54, 0.98) 100%);
+  border-radius: var(--radius-xl);
 }
 
 .ant-modal-content {
   background: transparent !important;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  border-radius: 20px;
+  box-shadow: var(--shadow-xl);
+  border-radius: var(--radius-xl);
 }
 
 .ant-modal-header {
-  background: rgba(15, 20, 37, 0.95);
+  background: rgba(6, 14, 26, 0.95);
   border-bottom: 1px solid var(--border-primary);
-  border-radius: 20px 20px 0 0;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
 }
 
 .ant-modal-title {
@@ -399,7 +408,7 @@ body {
 .ant-modal-footer {
   border-top: 1px solid var(--border-primary);
   background: transparent;
-  border-radius: 0 0 20px 20px;
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
 }
 
 /* 隐藏 Modal footer（当使用自定义按钮时） */
@@ -426,11 +435,11 @@ body {
 }
 
 .ant-tabs-tab-active {
-  color: var(--orange-400) !important;
+  color: var(--orange-500) !important;
 }
 
 .ant-tabs-ink-bar {
-  background: linear-gradient(135deg, #F97316 0%, #FB923C 100%);
+  background: linear-gradient(135deg, var(--orange-600) 0%, var(--orange-500) 100%);
 }
 
 .ant-tabs-content {
@@ -439,7 +448,7 @@ body {
 
 /* 全局 Card 样式 */
 .ant-card {
-  background: rgba(15, 20, 37, 0.8) !important;
+  background: var(--bg-secondary) !important;
   border-color: var(--border-primary) !important;
   color: var(--text-primary) !important;
 }
@@ -465,7 +474,7 @@ body {
 
 /* 全局 Spin 样式 */
 .ant-spin-dot-item {
-  background-color: var(--orange-500) !important;
+  background-color: var(--orange-600) !important;
 }
 
 .ant-spin-text {
@@ -479,7 +488,7 @@ body {
 
 /* 全局 Button 样式 */
 .ant-btn:not(.ant-btn-primary):not(.ant-btn-danger) {
-  background: rgba(30, 41, 59, 0.5);
+  background: rgba(20, 33, 54, 0.6);
   border-color: var(--border-secondary);
   color: var(--text-secondary);
 }
@@ -491,7 +500,7 @@ body {
 
 /* 全局 Input 样式 */
 .ant-input {
-  background: rgba(30, 41, 59, 0.5);
+  background: rgba(20, 33, 54, 0.6);
   border-color: var(--border-secondary);
   color: var(--text-primary);
 }
@@ -502,7 +511,7 @@ body {
 
 .ant-input:focus {
   border-color: var(--orange-600);
-  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+  box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.15);
 }
 
 .ant-input::placeholder {
@@ -521,13 +530,13 @@ body {
 }
 
 .ant-select-item:hover {
-  background: rgba(249, 115, 22, 0.1) !important;
+  background: rgba(230, 126, 34, 0.1) !important;
   color: var(--text-primary) !important;
 }
 
 .ant-select-item-selected {
-  color: var(--orange-400) !important;
-  background: rgba(249, 115, 22, 0.15) !important;
+  color: var(--orange-500) !important;
+  background: rgba(230, 126, 34, 0.15) !important;
 }
 
 /* 全局 Tag 样式 */
@@ -556,11 +565,11 @@ body {
 }
 
 .ant-layout-header {
-  background: rgba(15, 20, 37, 0.9);
+  background: rgba(20, 33, 54, 0.9);
 }
 
 .ant-layout-sider {
-  background: rgba(15, 20, 37, 0.8);
+  background: rgba(20, 33, 54, 0.8);
 }
 
 /* 全局 Dropdown 样式 */
@@ -578,6 +587,6 @@ body {
 }
 
 .ant-dropdown-menu-item:hover {
-  background: rgba(249, 115, 22, 0.1) !important;
+  background: rgba(230, 126, 34, 0.1) !important;
   color: var(--text-primary) !important;
 }

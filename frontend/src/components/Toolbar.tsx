@@ -1,8 +1,9 @@
 /**
  * 编辑器工具栏
+ * Design System v2.0
  */
 import { Editor } from '@tiptap/react';
-import { Button, Space, Tooltip } from 'antd';
+import { Button, Space, Tooltip, Divider } from 'antd';
 import {
   BoldOutlined,
   ItalicOutlined,
@@ -33,6 +34,7 @@ export function Toolbar({ editor, onSave, onAIContinue }: ToolbarProps) {
             icon={<BoldOutlined />}
             onClick={() => editor.chain().focus().toggleBold().run()}
             disabled={!editor.can().chain().focus().toggleBold().run()}
+            className={editor.isActive('bold') ? 'active-btn' : ''}
           />
         </Tooltip>
 
@@ -43,6 +45,7 @@ export function Toolbar({ editor, onSave, onAIContinue }: ToolbarProps) {
             icon={<ItalicOutlined />}
             onClick={() => editor.chain().focus().toggleItalic().run()}
             disabled={!editor.can().chain().focus().toggleItalic().run()}
+            className={editor.isActive('italic') ? 'active-btn' : ''}
           />
         </Tooltip>
 
@@ -53,6 +56,7 @@ export function Toolbar({ editor, onSave, onAIContinue }: ToolbarProps) {
             icon={<UnderlineOutlined />}
             onClick={() => editor.chain().focus().toggleUnderline().run()}
             disabled={!editor.can().chain().focus().toggleUnderline().run()}
+            className={editor.isActive('underline') ? 'active-btn' : ''}
           />
         </Tooltip>
 
@@ -63,6 +67,7 @@ export function Toolbar({ editor, onSave, onAIContinue }: ToolbarProps) {
             icon={<StrikethroughOutlined />}
             onClick={() => editor.chain().focus().toggleStrike().run()}
             disabled={!editor.can().chain().focus().toggleStrike().run()}
+            className={editor.isActive('strike') ? 'active-btn' : ''}
           />
         </Tooltip>
 
@@ -71,6 +76,7 @@ export function Toolbar({ editor, onSave, onAIContinue }: ToolbarProps) {
             type={editor.isActive('heading', { level: 1 }) ? 'primary' : 'default'}
             size="small"
             onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+            className={editor.isActive('heading', { level: 1 }) ? 'active-btn' : ''}
           >
             H1
           </Button>
@@ -81,6 +87,7 @@ export function Toolbar({ editor, onSave, onAIContinue }: ToolbarProps) {
             type={editor.isActive('heading', { level: 2 }) ? 'primary' : 'default'}
             size="small"
             onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+            className={editor.isActive('heading', { level: 2 }) ? 'active-btn' : ''}
           >
             H2
           </Button>
@@ -91,6 +98,7 @@ export function Toolbar({ editor, onSave, onAIContinue }: ToolbarProps) {
             type={editor.isActive('heading', { level: 3 }) ? 'primary' : 'default'}
             size="small"
             onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+            className={editor.isActive('heading', { level: 3 }) ? 'active-btn' : ''}
           >
             H3
           </Button>
@@ -102,6 +110,7 @@ export function Toolbar({ editor, onSave, onAIContinue }: ToolbarProps) {
             size="small"
             icon={<UnorderedListOutlined />}
             onClick={() => editor.chain().focus().toggleBulletList().run()}
+            className={editor.isActive('bulletList') ? 'active-btn' : ''}
           />
         </Tooltip>
 
@@ -111,6 +120,7 @@ export function Toolbar({ editor, onSave, onAIContinue }: ToolbarProps) {
             size="small"
             icon={<OrderedListOutlined />}
             onClick={() => editor.chain().focus().toggleOrderedList().run()}
+            className={editor.isActive('orderedList') ? 'active-btn' : ''}
           />
         </Tooltip>
 
@@ -120,6 +130,7 @@ export function Toolbar({ editor, onSave, onAIContinue }: ToolbarProps) {
             size="small"
             icon={<BlockOutlined />}
             onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+            className={editor.isActive('codeBlock') ? 'active-btn' : ''}
           />
         </Tooltip>
 
@@ -129,10 +140,11 @@ export function Toolbar({ editor, onSave, onAIContinue }: ToolbarProps) {
             size="small"
             icon={<FieldTimeOutlined />}
             onClick={() => editor.chain().focus().toggleBlockquote().run()}
+            className={editor.isActive('blockquote') ? 'active-btn' : ''}
           />
         </Tooltip>
 
-        <div style={{ width: 1, height: 24, background: '#d9d9d9', margin: '0 8px' }} />
+        <Divider type="vertical" style={{ borderColor: 'rgba(255,255,255,0.15)', margin: '0 8px' }} />
 
         <Tooltip title="AI 续写 (Ctrl+Enter)">
           <Button
@@ -140,6 +152,7 @@ export function Toolbar({ editor, onSave, onAIContinue }: ToolbarProps) {
             size="small"
             icon={<RobotOutlined />}
             onClick={onAIContinue}
+            className="ai-continue-btn"
           >
             AI 续写
           </Button>
@@ -151,6 +164,7 @@ export function Toolbar({ editor, onSave, onAIContinue }: ToolbarProps) {
             size="small"
             icon={<SaveOutlined />}
             onClick={onSave}
+            className="save-btn"
           >
             保存
           </Button>
