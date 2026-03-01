@@ -93,8 +93,7 @@ export default function CharacterEditor() {
       queryClient.invalidateQueries({ queryKey: ['characters', id] });
       message.success(isNew ? '角色已创建' : '角色已保存');
       setHasUnsavedChanges(false);
-      if (isNew && characterId === 'new') {
-        // 新建后跳转到列表页
+      if (isNew) {
         navigate(`/project/${id}/characters`);
       }
     },

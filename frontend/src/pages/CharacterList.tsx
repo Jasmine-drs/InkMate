@@ -98,8 +98,9 @@ export default function CharacterList() {
         <div className="header-left">
           <Button
             icon={<ArrowLeftOutlined />}
-            onClick={() => navigate(ROUTES.PROJECT_DETAIL(id!))}
+            onClick={() => id && navigate(ROUTES.PROJECT_DETAIL(id))}
             size="large"
+            disabled={!id}
           >
             返回
           </Button>

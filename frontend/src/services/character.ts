@@ -4,7 +4,7 @@
 import { api } from '@/utils/request';
 
 export interface CharacterData {
-  id?: string;
+  id: string;
   project_id?: string;
   name: string;
   role_type?: string;
