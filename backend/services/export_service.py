@@ -7,7 +7,7 @@ import os
 import tempfile
 from datetime import datetime
 from pathlib import Path
-from typing import AsyncIterator
+from typing import AsyncIterator, Optional
 
 from ebooklib import epub
 from docx import Document
@@ -19,6 +19,7 @@ from sqlalchemy import select, func
 from models.chapter import Chapter
 from models.project import Project
 from models.unit import Unit
+from models.export_history import ExportHistory
 
 
 class ExportService:
@@ -26,6 +27,70 @@ class ExportService:
 
     def __init__(self, db: AsyncSession):
         self.db = db
+
+    async def record_export_history(
+        self,
+        user_id: str,
+        project_id: str,
+        file_name: str,
+        file_size: int,
+        chapter_count: int,
+        format: str,
+        is_batch: bool = False,
+    ) -> ExportHistory:
+        """记录导出历史"""
+        history = ExportHistory(
+            user_id=user_id,
+            project_id=project_id,
+            format=format,
+            file_name=file_name,
+            file_size=file_size,
+            chapter_count=chapter_count,
+            is_batch=1 if is_batch else 0,
+        )
+        self.db.add(history)
+        await self.db.commit()
+        await self.db.refresh(history)
+        return history
+
+    async def get_export_history(
+        self,
+        user_id: str,
+        project_id: Optional[str] = None,
+        limit: int = 20,
+    ) -> list[ExportHistory]:
+        """获取导出历史"""
+        conditions = [ExportHistory.user_id == user_id]
+        if project_id:
+            conditions.append(ExportHistory.project_id == project_id)
+
+        result = await self.db.execute(
+            select(ExportHistory)
+            .where(*conditions)
+            .order_by(ExportHistory.created_at.desc())
+            .limit(limit)
+        )
+        return list(result.scalars().all())
+
+    async def delete_export_history(
+        self,
+        user_id: str,
+        history_id: str,
+    ) -> bool:
+        """删除导出历史"""
+        result = await self.db.execute(
+            select(ExportHistory).where(
+                ExportHistory.id == history_id,
+                ExportHistory.user_id == user_id,
+            )
+        )
+        history = result.scalar_one_or_none()
+        if not history:
+            return False
+
+        await self.db.delete(history)
+        await self.db.commit()
+        return True
 
     async def get_project_chapters(self, project_id: str) -> list[Chapter]:
         """获取项目的所有章节（按章节号排序）"""

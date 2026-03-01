@@ -186,7 +186,7 @@ async def chat(
     # 构建系统提示
     system_prompt = request.system_prompt or _build_system_prompt(request.context_type, project)
 
-    # 构建上下文（最近 5 条对话历史）
+    # 构建上下文（最近 5 条对话历史 + 项目设定联动）
     recent_messages, _ = await chat_service.get_messages(
         project_id=request.project_id,
         chapter_id=request.chapter_id,
@@ -194,6 +194,15 @@ async def chat(
     )
 
     context_parts = []
+
+    # 添加项目设定联动（世界观、角色等）
+    project_context = await chat_service.build_chat_context(
+        project_id=request.project_id,
+        chapter_id=request.chapter_id,
+    )
+    if project_context:
+        context_parts.append(project_context)
+
     if recent_messages:
         history_context = "\n".join([
             f"{'用户' if msg.role == 'user' else '助手'}: {msg.content}"

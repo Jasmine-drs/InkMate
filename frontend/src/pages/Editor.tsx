@@ -68,6 +68,9 @@ export default function Editor() {
   const createdChapterIdRef = useRef<string | undefined>(undefined);
   const isCreatingRef = useRef(false);
 
+  // 用于自动保存的章节 ID：新建章节时传入 'new' 确保定时器启动
+  const effectiveChapterId = chapterId && chapterId !== 'new' ? chapterId : (createdChapterIdRef.current || 'new');
+
   const {
     isSaving,
     lastSaveTime,
@@ -77,7 +80,7 @@ export default function Editor() {
     clearLocalDraft,
     saveStatus,
   } = useAutoSave({
-    chapterId: chapterId && chapterId !== 'new' ? chapterId : createdChapterIdRef.current,
+    chapterId: effectiveChapterId,
     projectId: projectId,
     saveInterval: 30000, // 30 秒自动保存
     content,

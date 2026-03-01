@@ -273,14 +273,35 @@ async def extract_tracking_from_chapters(
             detail="未找到指定章节"
         )
 
-    # 构建提取结果（当前返回空结果，后续集成 AI 分析）
-    # TODO: 集成 AI 分析功能，从章节内容自动提取状态变化
+    # 使用 AI 从章节提取追踪记录
+    service = TrackingService(db)
     results = []
+
     for chapter in chapters:
+        # 调用 AI 提取
+        extracted = await service.extract_from_chapter_ai(
+            project_id=project_id,
+            chapter_id=chapter.id,
+            chapter_content=chapter.content or "",
+            chapter_number=chapter.chapter_number,
+        )
+
+        # 保存提取的追踪记录
+        saved_trackings = await service.save_extracted_trackings(extracted)
+
+        # 构建返回结果
         result = TrackingExtractResult(
             chapter_id=chapter.id,
-            chapter_title=chapter.title,
-            extracted_trackings=[]
+            chapter_title=chapter.title or "",
+            extracted_trackings=[
+                TrackingCreate(
+                    tracking_type=t.tracking_type,
+                    entity_id=t.entity_id,
+                    chapter_number=t.chapter_number,
+                    state_data=t.state_data,
+                )
+                for t in saved_trackings
+            ]
         )
         results.append(result)
 

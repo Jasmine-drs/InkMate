@@ -5,7 +5,8 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Layout, Typography, Spin, Card, Button, Tabs, Tag, Table, Space, Popconfirm, App, Dropdown, MenuProps } from 'antd';
+import { Layout, Typography, Spin, Card, Button, Tabs, Tag, Table, Space, Popconfirm, App, Dropdown } from 'antd';
+import type { MenuProps } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
   ArrowLeftOutlined,

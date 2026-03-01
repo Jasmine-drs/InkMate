@@ -11,6 +11,7 @@ from .chapter_version import ChapterVersion
 from .tracking_record import TrackingRecord
 from .chat_message import ChatMessage
 from .generation_task import GenerationTask
+from .export_history import ExportHistory
 
 __all__ = [
     "User",
@@ -23,4 +24,5 @@ __all__ = [
     "TrackingRecord",
     "ChatMessage",
     "GenerationTask",
+    "ExportHistory",
 ]
