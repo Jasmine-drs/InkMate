@@ -194,7 +194,7 @@ async def continue_writing(
     request: ContinueRequest,
     current_user: User = Depends(get_current_user),
 ):
-    """AI 续写"""
+    """AI 续写（非流式）"""
     # 速率限制检查
     if not await check_rate_limit(current_user.id):
         raise HTTPException(
@@ -216,6 +216,44 @@ async def continue_writing(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="AI 续写失败，请稍后重试"
         )
+
+
+@router.post("/continue/stream", summary="AI 续写（流式）")
+async def continue_writing_stream(
+    request: ContinueRequest,
+    current_user: User = Depends(get_current_user),
+):
+    """AI 续写（流式 SSE 格式）"""
+    # 速率限制检查
+    if not await check_rate_limit(current_user.id):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"请求过于频繁，请稍后再试（限制：{settings.RATE_LIMIT_REQUESTS} 次/分钟）"
+        )
+
+    ai = get_ai_client()
+
+    async def _stream_writer() -> AsyncGenerator[str, None]:
+        try:
+            async for token in ai.continue_writing_stream(
+                content=request.content,
+                outline=request.outline,
+                length=request.length,
+            ):
+                yield f"data: {json.dumps({'token': token})}\n\n"
+        except Exception as e:
+            logger.error(f"AI 续写流式失败：{e}")
+            yield f"data: {json.dumps({'error': 'AI 续写失败'})}\n\n"
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(
+        _stream_writer(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+        },
+    )
 
 
 @router.post("/rewrite", response_model=GenerateResponse, summary="AI 改写")

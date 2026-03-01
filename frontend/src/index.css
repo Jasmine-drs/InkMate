@@ -486,6 +486,37 @@ body {
   color: var(--text-primary);
 }
 
+/* 全局 Popover/Popconfirm 样式 - 深色主题 */
+.ant-popover {
+  --antd-popover-bg: var(--bg-secondary);
+  --antd-popover-border-color: var(--border-primary);
+  --antd-popover-color: var(--text-primary);
+}
+
+.ant-popover .ant-popover-inner {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+}
+
+.ant-popover .ant-popover-title {
+  color: var(--text-primary);
+  border-bottom-color: var(--border-primary);
+}
+
+.ant-popover .ant-popover-inner-content {
+  color: var(--text-primary);
+}
+
+.ant-popover .ant-popover-message {
+  color: var(--text-primary);
+}
+
+.ant-popover .ant-popover-arrow {
+  background: var(--bg-secondary);
+  border-left: 1px solid var(--border-primary);
+  border-top: 1px solid var(--border-primary);
+}
+
 /* 全局 Button 样式 */
 .ant-btn:not(.ant-btn-primary):not(.ant-btn-danger) {
   background: rgba(20, 33, 54, 0.6);

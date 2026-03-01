@@ -165,7 +165,7 @@ class AIClient:
         outline: Optional[str] = None,
         length: str = "medium",  # short, medium, long
     ) -> str:
-        """AI 续写"""
+        """AI 续写（非流式）"""
         system_prompt = """你是一个专业的 AI 小说创作助手。
 请根据已有内容继续创作，保持风格一致，情节连贯。"""
 
@@ -184,6 +184,51 @@ class AIClient:
             prompt=prompt,
             system_prompt=system_prompt,
         )
+
+    async def continue_writing_stream(
+        self,
+        content: str,
+        outline: Optional[str] = None,
+        length: str = "medium",  # short, medium, long
+    ) -> AsyncGenerator[str, None]:
+        """AI 续写（流式）"""
+        if not self.api_key:
+            logger.warning("未配置 OPENAI_API_KEY，返回空字符串")
+            yield ""
+            return
+
+        system_prompt = """你是一个专业的 AI 小说创作助手。
+请根据已有内容继续创作，保持风格一致，情节连贯。"""
+
+        length_map = {
+            "short": "续写 200-300 字",
+            "medium": "续写 500-800 字",
+            "long": "续写 1000-1500 字",
+        }
+
+        prompt = f"""已有内容：
+{content}
+
+请继续创作，{length_map.get(length, length_map['medium'])}。保持文风一致，情节自然发展。"""
+
+        client = await self._get_client()
+        messages = self._build_chat_prompt(system_prompt, prompt)
+
+        try:
+            stream = await client.chat.completions.create(
+                model=self.model,
+                messages=messages,
+                temperature=self.temperature,
+                max_tokens=self.max_tokens,
+                stream=True,
+            )
+
+            async for chunk in stream:
+                if chunk.choices and chunk.choices[0].delta.content:
+                    yield chunk.choices[0].delta.content
+        except Exception as e:
+            logger.error(f"AI 续写流式失败：{e}")
+            raise
 
     async def rewrite(
         self,

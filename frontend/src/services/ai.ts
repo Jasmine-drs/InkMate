@@ -139,33 +139,64 @@ export const generateStream = async (
 };
 
 /**
- * 简化的流式续写（适用于编辑器内续写）
+ * 流式续写（使用真正的 SSE 流式接口）
  */
 export const continueWritingStream = async (
   content: string,
   onToken: (token: string) => void
 ): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    // 使用普通请求，模拟流式效果（逐字显示）
-    continueWriting({ content, length: 'medium' })
-      .then((response) => {
-        const fullContent = response.content;
-        let displayed = '';
-        let index = 0;
+  const token = localStorage.getItem('access_token');
 
-        // 逐字显示
-        const interval = setInterval(() => {
-          if (index < fullContent.length) {
-            const char = fullContent[index];
-            displayed += char;
-            onToken(char);
-            index++;
-          } else {
-            clearInterval(interval);
-            resolve(fullContent);
+  try {
+    const response = await fetch('/api/ai/continue/stream', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ content, length: 'medium' }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP error! status: ${response.status}, ${errorText}`);
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('ReadableStream not supported');
+    }
+
+    const decoder = new TextDecoder();
+    let fullContent = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value);
+      // 解析 SSE 格式的数据
+      const lines = chunk.split('\n');
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const data = line.slice(6);
+          if (data && data !== '[DONE]') {
+            try {
+              const parsed = JSON.parse(data);
+              if (parsed.token) {
+                fullContent += parsed.token;
+                onToken(parsed.token);
+              }
+            } catch (e) {
+              // 忽略解析错误
+            }
           }
-        }, 30); // 30ms 每字
-      })
-      .catch(reject);
-  });
+        }
+      }
+    }
+
+    return fullContent;
+  } catch (error) {
+    throw error;
+  }
 };
