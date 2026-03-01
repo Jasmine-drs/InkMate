@@ -12,6 +12,7 @@ from routers.auth import get_current_user
 from models.user import User
 from models.project import Project
 from models.chapter import Chapter
+from utils.deps import get_project_with_auth
 
 router = APIRouter(prefix="/projects/{project_id}/chapters", tags=["章节管理"])
 
@@ -26,15 +27,7 @@ async def create_chapter(
 ):
     """创建新的章节"""
     # 验证项目权限
-    project_result = await db.execute(
-        select(Project).where(Project.id == project_id)
-    )
-    project = project_result.scalar_one_or_none()
-    if not project or project.user_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="无权访问该项目"
-        )
+    await get_project_with_auth(project_id, db, current_user)
 
     service = ChapterService(db)
     chapter = await service.create_chapter(project_id, chapter_data, unit_id)
@@ -51,15 +44,7 @@ async def get_chapters(
 ):
     """获取项目的章节列表"""
     # 验证项目权限
-    project_result = await db.execute(
-        select(Project).where(Project.id == project_id)
-    )
-    project = project_result.scalar_one_or_none()
-    if not project or project.user_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="无权访问该项目"
-        )
+    await get_project_with_auth(project_id, db, current_user)
 
     service = ChapterService(db)
     skip = (page - 1) * page_size
@@ -83,15 +68,7 @@ async def get_chapter(
 ):
     """获取指定章节的内容"""
     # 验证项目权限
-    project_result = await db.execute(
-        select(Project).where(Project.id == project_id)
-    )
-    project = project_result.scalar_one_or_none()
-    if not project or project.user_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="无权访问该项目"
-        )
+    await get_project_with_auth(project_id, db, current_user)
 
     service = ChapterService(db)
     chapter = await service.get_chapter(project_id, chapter_num)
@@ -114,15 +91,7 @@ async def update_chapter(
 ):
     """更新章节内容"""
     # 验证项目权限
-    project_result = await db.execute(
-        select(Project).where(Project.id == project_id)
-    )
-    project = project_result.scalar_one_or_none()
-    if not project or project.user_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="无权访问该项目"
-        )
+    await get_project_with_auth(project_id, db, current_user)
 
     service = ChapterService(db)
     chapter = await service.get_chapter_by_id(chapter_id)
@@ -152,15 +121,7 @@ async def delete_chapter(
 ):
     """删除章节"""
     # 验证项目权限
-    project_result = await db.execute(
-        select(Project).where(Project.id == project_id)
-    )
-    project = project_result.scalar_one_or_none()
-    if not project or project.user_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="无权访问该项目"
-        )
+    await get_project_with_auth(project_id, db, current_user)
 
     service = ChapterService(db)
     chapter = await service.get_chapter_by_id(chapter_id)
@@ -196,15 +157,7 @@ async def get_chapter_versions(
 ):
     """获取章节的版本历史"""
     # 验证项目权限
-    project_result = await db.execute(
-        select(Project).where(Project.id == project_id)
-    )
-    project = project_result.scalar_one_or_none()
-    if not project or project.user_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="无权访问该项目"
-        )
+    await get_project_with_auth(project_id, db, current_user)
 
     service = ChapterService(db)
     chapter = await service.get_chapter_by_id(chapter_id)
@@ -247,15 +200,7 @@ async def get_chapter_version(
 ):
     """获取章节的指定版本内容"""
     # 验证项目权限
-    project_result = await db.execute(
-        select(Project).where(Project.id == project_id)
-    )
-    project = project_result.scalar_one_or_none()
-    if not project or project.user_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="无权访问该项目"
-        )
+    await get_project_with_auth(project_id, db, current_user)
 
     service = ChapterService(db)
     chapter = await service.get_chapter_by_id(chapter_id)

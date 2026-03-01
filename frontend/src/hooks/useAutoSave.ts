@@ -54,6 +54,24 @@ interface DraftData {
 }
 
 /**
+ * 防抖函数
+ */
+function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout | null = null;
+  return (...args: Parameters<T>) => {
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+    timeout = setTimeout(() => {
+      func(...args);
+    }, wait);
+  };
+}
+
+/**
  * 自动保存 Hook
  */
 export function useAutoSave(options: UseAutoSaveOptions): AutoSaveResult {
@@ -202,6 +220,14 @@ export function useAutoSave(options: UseAutoSaveOptions): AutoSaveResult {
     }
   }, [chapterId]);
 
+  // 使用防抖的 saveToLocal，避免每次输入都保存
+  const debouncedSaveToLocal = useCallback(
+    debounce(() => {
+      saveToLocal();
+    }, 1000), // 1 秒防抖
+    [saveToLocal]
+  );
+
   // 监听内容变化，设置定时保存
   useEffect(() => {
     if (!chapterId) return;
@@ -211,8 +237,8 @@ export function useAutoSave(options: UseAutoSaveOptions): AutoSaveResult {
       clearTimeout(saveTimerRef.current);
     }
 
-    // 内容变化时，先保存到本地
-    saveToLocal();
+    // 内容变化时，使用防抖保存到本地（避免频繁写入）
+    debouncedSaveToLocal();
 
     // 设置定时保存到服务器
     saveTimerRef.current = setTimeout(() => {
@@ -226,7 +252,7 @@ export function useAutoSave(options: UseAutoSaveOptions): AutoSaveResult {
         clearTimeout(saveTimerRef.current);
       }
     };
-  }, [chapterId, content, saveToLocal, saveToServer, saveInterval, onSaveToServer]);
+  }, [chapterId, content, debouncedSaveToLocal, saveToServer, saveInterval, onSaveToServer]);
 
   // 监听恢复事件
   useEffect(() => {

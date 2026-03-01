@@ -280,7 +280,9 @@ async def _generate_stream_content(
         ):
             yield f"data: {json.dumps({'token': token})}\n\n"
     except Exception as e:
-        yield f"data: {json.dumps({'error': str(e)})}\n\n"
+        # 记录完整错误到日志，但不返回给客户端
+        logger.error(f"AI 流式生成失败：{e}")
+        yield f"data: {json.dumps({'error': 'AI 生成失败，请稍后重试'})}\n\n"
     yield "data: [DONE]\n\n"
 
 
