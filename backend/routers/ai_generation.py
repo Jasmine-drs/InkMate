@@ -240,7 +240,9 @@ async def continue_writing_stream(
                 outline=request.outline,
                 length=request.length,
             ):
-                yield f"data: {json.dumps({'token': token})}\n\n"
+                # 转义 JSON 特殊字符，确保换行符正确传输
+                escaped_token = token.replace('\\', '\\\\').replace('"', '\\"').replace('\n', '\\n')
+                yield f"data: {json.dumps({'token': escaped_token})}\n\n"
         except Exception as e:
             logger.error(f"AI 续写流式失败：{e}")
             yield f"data: {json.dumps({'error': 'AI 续写失败'})}\n\n"
@@ -252,6 +254,8 @@ async def continue_writing_stream(
         headers={
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+            "Transfer-Encoding": "chunked",
         },
     )
 
@@ -328,7 +332,9 @@ async def _generate_stream_content(
             context=context,
             temperature=temperature,
         ):
-            yield f"data: {json.dumps({'token': token})}\n\n"
+            # 转义 JSON 特殊字符，确保换行符正确传输
+            escaped_token = token.replace('\\', '\\\\').replace('"', '\\"').replace('\n', '\\n')
+            yield f"data: {json.dumps({'token': escaped_token})}\n\n"
     except Exception as e:
         # 记录完整错误到日志，但不返回给客户端
         logger.error(f"AI 流式生成失败：{e}")
@@ -360,5 +366,7 @@ async def generate_stream(
         headers={
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",  # 禁用 Nginx 缓冲
+            "Transfer-Encoding": "chunked",
         },
     )

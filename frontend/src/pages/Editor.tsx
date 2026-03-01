@@ -265,6 +265,7 @@ export default function Editor() {
           {hasLocalDraft && (
             <Space>
               <Popconfirm
+                overlayClassName="dark-popconfirm"
                 title="恢复本地草稿"
                 description="确定要恢复本地保存的草稿吗？当前内容将会被替换。"
                 onConfirm={restoreFromLocal}
@@ -276,6 +277,7 @@ export default function Editor() {
                 </Button>
               </Popconfirm>
               <Popconfirm
+                overlayClassName="dark-popconfirm"
                 title="清除本地草稿"
                 description="确定要清除本地保存的草稿吗？"
                 onConfirm={clearLocalDraft}

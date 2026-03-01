@@ -373,67 +373,68 @@
 
 /* ========================================
    Popconfirm 弹窗样式 - 深色主题
+   使用 overlayClassName="dark-popconfirm" 针对性覆盖
    ======================================== */
-.editor-layout .ant-popover {
-  --antd-popover-bg: #142136 !important;
-  --antd-popover-border-color: var(--border-primary) !important;
-  --antd-popover-color: #FFFFFF !important;
-}
-
-.editor-layout .ant-popover .ant-popover-inner {
+.dark-popconfirm .ant-popover-inner {
   background: #142136 !important;
-  border: 1px solid var(--border-primary) !important;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important;
 }
 
-.editor-layout .ant-popover .ant-popover-title {
+.dark-popconfirm .ant-popover-title {
   color: #FFFFFF !important;
-  border-bottom-color: var(--border-primary) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.15) !important;
   background: #142136 !important;
+  font-weight: 600 !important;
 }
 
-.editor-layout .ant-popover .ant-popover-inner-content {
+.dark-popconfirm .ant-popover-inner-content {
   color: #FFFFFF !important;
   background: #142136 !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
 }
 
-.editor-layout .ant-popover .ant-popover-message {
+.dark-popconfirm .ant-popover-message {
   color: #FFFFFF !important;
   background: #142136 !important;
 }
 
-.editor-layout .ant-popover .ant-popover-description {
+.dark-popconfirm .ant-popover-description {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* 覆盖所有 Typography 样式 */
+.dark-popconfirm .ant-typography,
+.dark-popconfirm .ant-typography * {
   color: #FFFFFF !important;
 }
 
-/* 覆盖 Popconfirm 内的 Typography 样式 */
-.editor-layout .ant-popover .ant-typography,
-.editor-layout .ant-popover .ant-typography * {
-  color: #FFFFFF !important;
-}
-
-.editor-layout .ant-popover .ant-btn-primary {
-  background: linear-gradient(135deg, var(--orange-600) 0%, var(--orange-500) 100%) !important;
+/* 按钮样式 */
+.dark-popconfirm .ant-btn-primary {
+  background: linear-gradient(135deg, #E67E22 0%, #FF9F43 100%) !important;
   border: none !important;
-  color: white !important;
+  color: #FFFFFF !important;
+  font-weight: 600 !important;
 }
 
-.editor-layout .ant-popover .ant-btn-default {
-  background: rgba(20, 33, 54, 0.6) !important;
-  border-color: var(--border-secondary) !important;
+.dark-popconfirm .ant-btn-default {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
   color: #FFFFFF !important;
 }
 
-.editor-layout .ant-popover .ant-btn-default:hover {
-  border-color: var(--orange-600) !important;
+.dark-popconfirm .ant-btn-default:hover {
+  border-color: #E67E22 !important;
   color: #FFFFFF !important;
-  background: rgba(20, 33, 54, 0.8) !important;
+  background: rgba(230, 126, 34, 0.2) !important;
 }
 
-.editor-layout .ant-popover .ant-popover-arrow {
+/* 箭头样式 */
+.dark-popconfirm .ant-popover-arrow {
   background: #142136 !important;
-  border-left: 1px solid var(--border-primary) !important;
-  border-top: 1px solid var(--border-primary) !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
 }
 
 /* ========================================

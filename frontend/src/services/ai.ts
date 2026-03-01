@@ -113,20 +113,37 @@ export const generateStream = async (
 
     const decoder = new TextDecoder();
     let content = '';
+    let buffer = '';
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
 
-      const chunk = decoder.decode(value);
-      // 解析 SSE 格式的数据
-      const lines = chunk.split('\n');
-      for (const line of lines) {
+      buffer += decoder.decode(value, { stream: true });
+
+      // 处理缓冲区中的完整行
+      let lineEndIndex;
+      while ((lineEndIndex = buffer.indexOf('\n')) >= 0) {
+        const line = buffer.slice(0, lineEndIndex);
+        buffer = buffer.slice(lineEndIndex + 1);
+
         if (line.startsWith('data: ')) {
-          const token = line.slice(6);
-          if (token && token !== '[DONE]') {
-            content += token;
-            callbacks.onToken(token);
+          const data = line.slice(6);
+          if (data && data !== '[DONE]') {
+            try {
+              const parsed = JSON.parse(data);
+              if (parsed.token) {
+                // 还原转义的换行符
+                const unescapedToken = parsed.token
+                  .replace(/\\n/g, '\n')
+                  .replace(/\\"/g, '"')
+                  .replace(/\\\\/g, '\\');
+                content += unescapedToken;
+                callbacks.onToken(unescapedToken);
+              }
+            } catch (e) {
+              // 忽略解析错误
+            }
           }
         }
       }
@@ -169,23 +186,33 @@ export const continueWritingStream = async (
 
     const decoder = new TextDecoder();
     let fullContent = '';
+    let buffer = '';
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
 
-      const chunk = decoder.decode(value);
-      // 解析 SSE 格式的数据
-      const lines = chunk.split('\n');
-      for (const line of lines) {
+      buffer += decoder.decode(value, { stream: true });
+
+      // 处理缓冲区中的完整行
+      let lineEndIndex;
+      while ((lineEndIndex = buffer.indexOf('\n')) >= 0) {
+        const line = buffer.slice(0, lineEndIndex);
+        buffer = buffer.slice(lineEndIndex + 1);
+
         if (line.startsWith('data: ')) {
           const data = line.slice(6);
           if (data && data !== '[DONE]') {
             try {
               const parsed = JSON.parse(data);
               if (parsed.token) {
-                fullContent += parsed.token;
-                onToken(parsed.token);
+                // 还原转义的换行符
+                const unescapedToken = parsed.token
+                  .replace(/\\n/g, '\n')
+                  .replace(/\\"/g, '"')
+                  .replace(/\\\\/g, '\\');
+                fullContent += unescapedToken;
+                onToken(unescapedToken);
               }
             } catch (e) {
               // 忽略解析错误
