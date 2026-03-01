@@ -1,7 +1,7 @@
 /**
  * 章节编辑器页面 - TipTap 富文本编辑器
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Layout,
@@ -12,14 +12,19 @@ import {
   message,
   Divider,
   Tag,
+  Popconfirm,
 } from 'antd';
 import {
   ArrowLeftOutlined,
   SaveOutlined,
   RobotOutlined,
   KeyOutlined,
+  CloudSyncOutlined,
+  FileSyncOutlined,
 } from '@ant-design/icons';
 import { RichTextEditor } from '@/components/RichTextEditor';
+import { useAutoSave } from '@/hooks/useAutoSave';
+import { getChapter, updateChapter, getChapterById } from '@/services/chapter';
 import './Editor.css';
 
 const { Header, Content, Sider } = Layout;
@@ -31,18 +36,82 @@ export default function Editor() {
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [saving, setSaving] = useState(false);
+  const [_loading, setLoading] = useState(false);
   const [wordCount, setWordCount] = useState(0);
+  const [_isNewChapter, setIsNewChapter] = useState(false);
 
-  // 加载章节数据（TODO: 从 API 获取）
+  // 自动保存 Hook
+  const {
+    isSaving,
+    lastSaveTime,
+    hasLocalDraft,
+    handleSaveNow,
+    restoreFromLocal,
+    clearLocalDraft,
+    saveStatus,
+  } = useAutoSave({
+    chapterId: chapterId && chapterId !== 'new' ? chapterId : undefined,
+    projectId: projectId,
+    saveInterval: 30000, // 30 秒自动保存
+    content,
+    title,
+    onSaveToServer: useCallback(async ({ title, content }: { title: string; content: string }) => {
+      if (!projectId || !chapterId) return;
+      await updateChapter(projectId, chapterId, { title, content }, true);
+    }, [projectId, chapterId]),
+  });
+
+  // 加载章节数据
   useEffect(() => {
-    if (chapterId && chapterId !== 'new') {
-      // TODO: 调用 API 获取章节内容
-      // 暂时使用模拟数据
-      setTitle(`第${chapterId}章 示例标题`);
-      setContent('<p>这是示例内容，开始你的创作吧...</p>');
-    }
-  }, [chapterId]);
+    const loadChapter = async () => {
+      if (!projectId) return;
+
+      // 如果是新建章节
+      if (!chapterId || chapterId === 'new') {
+        setIsNewChapter(true);
+        setTitle('');
+        setContent('');
+        return;
+      }
+
+      setLoading(true);
+      try {
+        // 尝试通过 ID 获取章节（chapterId 可能是数字或 UUID）
+        let chapter;
+        const chapterNum = parseInt(chapterId, 10);
+        if (!isNaN(chapterNum)) {
+          chapter = await getChapter(projectId, chapterNum);
+        } else {
+          chapter = await getChapterById(projectId, chapterId);
+        }
+
+        if (chapter) {
+          setTitle(chapter.title);
+          setContent(chapter.content || '');
+          setIsNewChapter(false);
+        }
+      } catch (error: any) {
+        console.error('加载章节失败:', error);
+        message.error('加载章节失败，' + (error.message || '请检查网络连接'));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadChapter();
+  }, [projectId, chapterId]);
+
+  // 监听恢复草稿事件
+  useEffect(() => {
+    const handleRestoreDraft = (event: Event) => {
+      const customEvent = event as CustomEvent<{ title: string; content: string }>;
+      setTitle(customEvent.detail.title);
+      setContent(customEvent.detail.content);
+    };
+
+    window.addEventListener('restore-draft', handleRestoreDraft as EventListener);
+    return () => window.removeEventListener('restore-draft', handleRestoreDraft as EventListener);
+  }, []);
 
   // 更新字数统计
   useEffect(() => {
@@ -57,7 +126,7 @@ export default function Editor() {
       // Ctrl+S 保存
       if (e.ctrlKey && e.key === 's') {
         e.preventDefault();
-        handleSave();
+        handleSaveNow();
       }
       // Ctrl+Enter AI 续写
       if (e.ctrlKey && e.key === 'Enter') {
@@ -68,20 +137,7 @@ export default function Editor() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      // TODO: 调用保存 API
-      await new Promise(resolve => setTimeout(resolve, 500));
-      message.success('保存成功');
-    } catch (error) {
-      message.error('保存失败');
-    } finally {
-      setSaving(false);
-    }
-  };
+  }, [handleSaveNow]);
 
   const handleAIContinue = () => {
     // TODO: AI 续写功能
@@ -106,6 +162,13 @@ export default function Editor() {
         </div>
         <div className="header-right">
           <Space>
+            {/* 保存状态指示器 */}
+            {chapterId && chapterId !== 'new' && (
+              <Tag className="save-status" icon={saveStatus === 'saving' ? <CloudSyncOutlined spin /> : <FileSyncOutlined />}>
+                {saveStatus === 'saving' ? '保存中...' : saveStatus === 'saved' ? '已保存' : saveStatus === 'error' ? '保存失败' : '未保存'}
+                {lastSaveTime && ` · ${lastSaveTime.toLocaleTimeString()}`}
+              </Tag>
+            )}
             <Tag className="shortcut-hint" icon={<KeyOutlined />}>
               Ctrl+S 保存
             </Tag>
@@ -113,6 +176,33 @@ export default function Editor() {
               Ctrl+Enter AI 续写
             </Tag>
           </Space>
+          {/* 本地草稿操作 */}
+          {hasLocalDraft && (
+            <Space>
+              <Popconfirm
+                title="恢复本地草稿"
+                description="确定要恢复本地保存的草稿吗？当前内容将会被替换。"
+                onConfirm={restoreFromLocal}
+                okText="确定"
+                cancelText="取消"
+              >
+                <Button icon={<FileSyncOutlined />}>
+                  恢复草稿
+                </Button>
+              </Popconfirm>
+              <Popconfirm
+                title="清除本地草稿"
+                description="确定要清除本地保存的草稿吗？"
+                onConfirm={clearLocalDraft}
+                okText="确定"
+                cancelText="取消"
+              >
+                <Button danger icon={<CloudSyncOutlined />}>
+                  清除草稿
+                </Button>
+              </Popconfirm>
+            </Space>
+          )}
           <Button
             className="ai-btn"
             icon={<RobotOutlined />}
@@ -124,10 +214,11 @@ export default function Editor() {
             className="save-btn"
             type="primary"
             icon={<SaveOutlined />}
-            onClick={handleSave}
-            loading={saving}
+            onClick={handleSaveNow}
+            loading={isSaving}
+            disabled={!chapterId || chapterId === 'new'}
           >
-            保存
+            {isSaving ? '保存中...' : '保存'}
           </Button>
         </div>
       </Header>
@@ -137,7 +228,7 @@ export default function Editor() {
           <RichTextEditor
             content={content}
             onChange={setContent}
-            onSave={handleSave}
+            onSave={handleSaveNow}
             onAIContinue={handleAIContinue}
           />
         </div>
@@ -185,8 +276,14 @@ export default function Editor() {
               </li>
               <li className="tip-item">
                 <div className="tip-dot" />
-                <Text className="tip-text">自动保存每 5 分钟一次</Text>
+                <Text className="tip-text">自动保存每 30 秒一次（Ctrl+S 手动保存）</Text>
               </li>
+              {hasLocalDraft && (
+                <li className="tip-item" style={{ color: '#faad14' }}>
+                  <div className="tip-dot" />
+                  <Text className="tip-text" style={{ color: '#faad14' }}>检测到本地草稿，可恢复</Text>
+                </li>
+              )}
             </ul>
           </div>
 
