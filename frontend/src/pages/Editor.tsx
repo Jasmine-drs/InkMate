@@ -24,7 +24,7 @@ import {
 } from '@ant-design/icons';
 import { RichTextEditor } from '@/components/RichTextEditor';
 import { useAutoSave } from '@/hooks/useAutoSave';
-import { getChapter, updateChapter, getChapterById, createChapter, type CreateChapterParams } from '@/services/chapter';
+import { getChapter, updateChapter, getChapterById, createChapter } from '@/services/chapter';
 import { VersionHistoryModal } from '@/components/VersionHistoryModal';
 import { continueWritingStream } from '@/services/ai';
 import './Editor.css';
