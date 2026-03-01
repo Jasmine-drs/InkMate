@@ -161,6 +161,13 @@
 .ai-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  color: var(--orange-500) !important;
+  background: linear-gradient(135deg, rgba(230, 126, 34, 0.15) 0%, rgba(255, 159, 67, 0.1) 100%) !important;
+  border-color: rgba(230, 126, 34, 0.3) !important;
+}
+
+.ai-btn:disabled .anticon {
+  color: var(--orange-500) !important;
 }
 
 /* 保存按钮 */

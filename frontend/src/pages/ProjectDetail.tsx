@@ -13,6 +13,7 @@ import {
   FireOutlined,
   BookOutlined,
   TeamOutlined,
+  FolderOutlined,
 } from '@ant-design/icons';
 import { getProject } from '@/services/project';
 import { ROUTES } from '@/pages/SettingsEditor';
@@ -226,6 +227,33 @@ export default function ProjectDetail() {
                         onClick={() => navigate(`/project/${id}/outlines`)}
                       >
                         <BookOutlined /> 管理大纲
+                      </Button>
+                    </div>
+                  </div>
+                ),
+              },
+              {
+                key: 'units',
+                label: (
+                  <div className="tab-label">
+                    <FolderOutlined />
+                    <span>单元管理</span>
+                  </div>
+                ),
+                children: (
+                  <div className="tab-content">
+                    <div className="empty-module">
+                      <div className="module-icon units">
+                        <FolderOutlined />
+                      </div>
+                      <Title level={5}>暂无单元</Title>
+                      <Text className="module-text">创建单元结构，组织章节内容</Text>
+                      <Button
+                        type="primary"
+                        className="create-unit-btn"
+                        onClick={() => navigate(`/project/${id}/units`)}
+                      >
+                        <FolderOutlined /> 管理单元
                       </Button>
                     </div>
                   </div>

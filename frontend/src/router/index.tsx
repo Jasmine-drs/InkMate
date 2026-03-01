@@ -12,6 +12,8 @@ import CharacterList from '@/pages/CharacterList';
 import CharacterEditor from '@/pages/CharacterEditor';
 import OutlineList from '@/pages/OutlineList';
 import OutlineEditor from '@/pages/OutlineEditor';
+import UnitList from '@/pages/UnitList';
+import UnitEditor from '@/pages/UnitEditor';
 
 export const router = createBrowserRouter([
   {
@@ -53,6 +55,14 @@ export const router = createBrowserRouter([
       {
         path: 'project/:id/outline/:outlineId',
         element: <OutlineEditor />,
+      },
+      {
+        path: 'project/:id/units',
+        element: <UnitList />,
+      },
+      {
+        path: 'project/:id/unit/:unitId',
+        element: <UnitEditor />,
       },
     ],
   },

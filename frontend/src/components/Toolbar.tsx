@@ -154,7 +154,7 @@ export function Toolbar({ editor, onSave, onAIContinue, isEmpty = false }: Toolb
             icon={<RobotOutlined />}
             onClick={onAIContinue}
             disabled={isEmpty}
-            className="ai-continue-btn"
+            className="ai-btn"
           >
             AI 续写
           </Button>
