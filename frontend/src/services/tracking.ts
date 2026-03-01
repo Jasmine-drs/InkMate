@@ -4,15 +4,17 @@
 import { api } from '@/utils/request';
 
 /**
- * 追踪类型枚举
+ * 追踪类型常量
  */
-export enum TrackingType {
-  CHARACTER_STATE = 'character_state',  // 角色状态
-  FORESHADOWING = 'foreshadowing',      // 伏笔
-  ITEM = 'item',                        // 物品
-  TIMELINE = 'timeline',                // 时间线
-  UNIT_PROGRESS = 'unit_progress',      // 单元进度
-}
+export const TrackingType = {
+  CHARACTER_STATE: 'character_state',  // 角色状态
+  FORESHADOWING: 'foreshadowing',      // 伏笔
+  ITEM: 'item',                        // 物品
+  TIMELINE: 'timeline',                // 时间线
+  UNIT_PROGRESS: 'unit_progress',      // 单元进度
+} as const;
+
+export type TrackingType = typeof TrackingType[keyof typeof TrackingType];
 
 /**
  * 状态追踪数据
@@ -20,7 +22,7 @@ export enum TrackingType {
 export interface TrackingData {
   id: string;
   project_id: string;
-  tracking_type: TrackingType;
+  tracking_type: string;
   entity_id?: string;
   chapter_number?: number;
   state_data?: Record<string, unknown>;
@@ -32,7 +34,7 @@ export interface TrackingData {
  * 创建追踪记录参数
  */
 export interface CreateTrackingParams {
-  tracking_type: TrackingType;
+  tracking_type: string;
   entity_id?: string;
   chapter_number?: number;
   state_data?: Record<string, unknown>;
@@ -42,7 +44,7 @@ export interface CreateTrackingParams {
  * 更新追踪记录参数
  */
 export interface UpdateTrackingParams {
-  tracking_type?: TrackingType;
+  tracking_type?: string;
   entity_id?: string;
   chapter_number?: number;
   state_data?: Record<string, unknown>;
@@ -53,7 +55,7 @@ export interface UpdateTrackingParams {
  */
 export interface TrackingExtractRequest {
   chapter_ids: string[];
-  tracking_types?: TrackingType[];
+  tracking_types?: string[];
 }
 
 /**
@@ -81,7 +83,7 @@ export const createTracking = async (
 export const getTrackingList = async (
   projectId: string,
   params?: {
-    tracking_type?: TrackingType;
+    tracking_type?: string;
     entity_id?: string;
     page?: number;
     page_size?: number;

@@ -247,6 +247,10 @@ export const continueWritingStream = async (
           if (data && data !== '[DONE]') {
             try {
               const parsed = JSON.parse(data);
+              // 检查是否有错误信息
+              if (parsed.error) {
+                throw new StreamingError('server', parsed.error);
+              }
               if (parsed.token) {
                 // 还原转义的换行符
                 const unescapedToken = parsed.token
@@ -257,6 +261,10 @@ export const continueWritingStream = async (
                 onToken(unescapedToken);
               }
             } catch (e) {
+              // 如果是 StreamingError，重新抛出
+              if (e instanceof StreamingError) {
+                throw e;
+              }
               // 解析错误，继续处理后续 token
               console.warn('Token 解析失败:', e);
             }

@@ -13,7 +13,7 @@ export const exportToTxt = async (projectId: string): Promise<string> => {
   const response = await api.get(`/export/${projectId}/txt`, {
     responseType: 'blob',
   });
-  return window.URL.createObjectURL(new Blob([response], { type: 'text/plain;charset=utf-8' }));
+  return window.URL.createObjectURL(new Blob([response as BlobPart], { type: 'text/plain;charset=utf-8' }));
 };
 
 /**
@@ -25,7 +25,7 @@ export const exportToEpub = async (projectId: string): Promise<string> => {
   const response = await api.get(`/export/${projectId}/epub`, {
     responseType: 'blob',
   });
-  return window.URL.createObjectURL(new Blob([response], { type: 'application/epub+zip' }));
+  return window.URL.createObjectURL(new Blob([response as BlobPart], { type: 'application/epub+zip' }));
 };
 
 /**
@@ -37,7 +37,7 @@ export const exportToDocx = async (projectId: string): Promise<string> => {
   const response = await api.get(`/export/${projectId}/docx`, {
     responseType: 'blob',
   });
-  return window.URL.createObjectURL(new Blob([response], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }));
+  return window.URL.createObjectURL(new Blob([response as BlobPart], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }));
 };
 
 /**
