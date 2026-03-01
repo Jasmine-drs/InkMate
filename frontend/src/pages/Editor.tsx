@@ -313,8 +313,8 @@ export default function Editor() {
             icon={<SaveOutlined />}
             onClick={handleSaveNow}
             loading={isSaving}
-            disabled={!projectId || !content.trim()}
-            title={!content || !content.trim() ? '内容为空，无法保存' : '保存章节'}
+            disabled={!projectId || content.trim().length === 0}
+            title={content.trim().length === 0 ? '内容为空，无法保存' : '保存章节'}
           >
             {isSaving ? '保存中...' : '保存'}
           </Button>

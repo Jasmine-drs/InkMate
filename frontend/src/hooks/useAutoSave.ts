@@ -166,9 +166,11 @@ export function useAutoSave(options: UseAutoSaveOptions): AutoSaveResult {
   const handleSaveNow = useCallback(async () => {
     if (isSaving) return;
 
-    // 检查内容是否为空
-    const currentContent = contentRef.current?.trim();
-    if (!currentContent) {
+    // 检查内容是否为空（使用 ref 确保获取最新值）
+    const currentContent = contentRef.current?.trim() || '';
+    const hasContent = currentContent.length > 0;
+
+    if (!hasContent) {
       message.warning('内容为空，无法保存');
       return;
     }
