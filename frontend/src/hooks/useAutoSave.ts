@@ -97,7 +97,7 @@ export function useAutoSave(options: UseAutoSaveOptions): AutoSaveResult {
   // 使用 ref 跟踪内容变化
   const contentRef = useRef(content);
   const titleRef = useRef(title);
-  const saveTimerRef = useRef<number | null>(null);
+  const workerRef = useRef<Worker | null>(null);
   const hasUnsavedChanges = useRef(false);
 
   // 使用 ref 存储回调的最新引用，避免闭包问题
@@ -269,20 +269,30 @@ export function useAutoSave(options: UseAutoSaveOptions): AutoSaveResult {
     debouncedSaveToLocal();
   }, [chapterId, content, title, debouncedSaveToLocal]);
 
-  // 独立的定时器 effect - 不依赖 content，只负责定时触发
+  // Web Worker 定时器 - 后台运行不受浏览器节流影响
   useEffect(() => {
     if (!chapterId) return;
 
-    // 清除之前的定时器
-    if (saveTimerRef.current) {
-      clearInterval(saveTimerRef.current);
-    }
+    // 内联创建 Worker（无需额外文件）
+    const workerCode = `
+      let timerId = null;
+      self.onmessage = (e) => {
+        const { type, interval } = e.data;
+        if (type === 'start') {
+          timerId = setInterval(() => self.postMessage({ type: 'tick' }), interval);
+        } else if (type === 'stop' && timerId) {
+          clearInterval(timerId);
+          timerId = null;
+        }
+      };
+    `;
+    const blob = new Blob([workerCode], { type: 'application/javascript' });
+    const blobUrl = URL.createObjectURL(blob);
+    const worker = new Worker(blobUrl);
+    workerRef.current = worker;
 
-    // 设置定时保存到服务器
-    saveTimerRef.current = window.setInterval(() => {
-      // 只有有变化且不在保存中时才保存
+    worker.onmessage = () => {
       if (hasChangesSinceLastSave.current && !isSaving) {
-        // 检查内容是否为空
         const currentContent = contentRef.current?.trim() || '';
         if (currentContent.length > 0 && onSaveToServerRef.current) {
           console.log('[AutoSave] 定时保存触发');
@@ -290,32 +300,26 @@ export function useAutoSave(options: UseAutoSaveOptions): AutoSaveResult {
           hasChangesSinceLastSave.current = false;
         }
       }
-    }, saveInterval);
+    };
+
+    worker.postMessage({ type: 'start', interval: saveInterval });
 
     return () => {
-      if (saveTimerRef.current) {
-        clearInterval(saveTimerRef.current);
-      }
+      worker.postMessage({ type: 'stop' });
+      worker.terminate();
+      URL.revokeObjectURL(blobUrl);
+      workerRef.current = null;
     };
   }, [chapterId, saveInterval, saveToServer, isSaving]);
 
   // 监听恢复事件
   useEffect(() => {
     const handleRestore = (_event: Event) => {
-      // 静默处理恢复事件，无需日志输出
+      // 静默处理
     };
 
     window.addEventListener('restore-draft', handleRestore);
     return () => window.removeEventListener('restore-draft', handleRestore);
-  }, []);
-
-  // 清理
-  useEffect(() => {
-    return () => {
-      if (saveTimerRef.current) {
-        clearTimeout(saveTimerRef.current);
-      }
-    };
   }, []);
 
   return {
