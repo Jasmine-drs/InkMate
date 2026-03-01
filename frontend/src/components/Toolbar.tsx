@@ -21,9 +21,10 @@ interface ToolbarProps {
   editor: Editor;
   onSave: () => void;
   onAIContinue: () => void;
+  isEmpty?: boolean;
 }
 
-export function Toolbar({ editor, onSave, onAIContinue }: ToolbarProps) {
+export function Toolbar({ editor, onSave, onAIContinue, isEmpty = false }: ToolbarProps) {
   return (
     <div className="editor-toolbar">
       <Space size="small" wrap>
