@@ -9,10 +9,10 @@ import {
   Button,
   Input,
   Space,
-  message,
   Divider,
   Tag,
   Popconfirm,
+  App,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -33,6 +33,7 @@ const { Header, Content, Sider } = Layout;
 const { Title, Text } = Typography;
 
 export default function Editor() {
+  const { message } = App.useApp();
   const { projectId, chapterId } = useParams<{ projectId: string; chapterId: string }>();
   const navigate = useNavigate();
 
@@ -176,17 +177,17 @@ export default function Editor() {
     }
 
     setIsAIGenerating(true);
-    message.loading('AI 正在创作...', 0);
+    message.loading({ content: 'AI 正在创作...', key: 'ai-generate', duration: 0 });
 
     try {
       await continueWritingStream(content, (token) => {
         setContent((prev) => prev + token);
       });
-      message.destroy();
+      message.destroy('ai-generate');
       message.success('AI 续写完成');
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'AI 续写失败';
-      message.destroy();
+      message.destroy('ai-generate');
       message.error('AI 续写失败：' + errorMessage);
     } finally {
       setIsAIGenerating(false);
@@ -242,7 +243,7 @@ export default function Editor() {
             onChange={(e) => setTitle(e.target.value)}
             placeholder="章节标题"
             className="title-input"
-            bordered={false}
+            variant="borderless"
           />
         </div>
         <div className="header-right">
