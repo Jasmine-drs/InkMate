@@ -15,13 +15,14 @@ import {
   Divider,
   App,
   Spin,
+  Select,
 } from 'antd';
 import {
   ArrowLeftOutlined,
   SaveOutlined,
   FolderOutlined,
 } from '@ant-design/icons';
-import { getUnit, updateUnit, createUnit } from '@/services/unit';
+import { getUnit, updateUnit, createUnit, getUnitList, type CreateUnitParams, type UnitData } from '@/services/unit';
 import { ROUTES } from '@/pages/SettingsEditor';
 import './UnitEditor.css';
 
@@ -30,10 +31,20 @@ const { Title } = Typography;
 const { TextArea } = Input;
 
 interface UnitFormValues {
+  unit_number?: number;
   title: string;
-  description?: string;
-  settings?: Record<string, never>;
+  unit_type?: string;
+  start_chapter?: number;
+  end_chapter?: number;
+  settings?: Record<string, unknown>;
+  outline?: Record<string, unknown>;
 }
+
+const unitTypeOptions = [
+  { label: '独立单元', value: 'standalone' },
+  { label: '主线相关', value: 'mainline_related' },
+  { label: '过渡单元', value: 'transition' },
+];
 
 export default function UnitEditor() {
   const { message } = App.useApp();
@@ -53,24 +64,55 @@ export default function UnitEditor() {
     enabled: !isNew && !!id && !!unitId,
   });
 
+  // 获取单元列表（用于新单元自动分配序号）
+  const { data: unitList } = useQuery({
+    queryKey: ['units', id],
+    queryFn: () => getUnitList(id!, 1, 1000),
+    enabled: isNew && !!id,
+  });
+
   // 初始化表单
   useEffect(() => {
     if (data) {
       form.setFieldsValue({
+        unit_number: data.unit_number,
         title: data.title,
-        description: data.description,
-        settings: data.settings as Record<string, never> | undefined,
+        unit_type: data.unit_type,
+        start_chapter: data.start_chapter,
+        end_chapter: data.end_chapter,
+        settings: data.settings as any,
+        outline: data.outline as any,
+      });
+    } else if (isNew && unitList) {
+      // 新单元自动分配下一个可用序号
+      const maxNumber = unitList.items.reduce((max: number, item: UnitData) =>
+        Math.max(max, item.unit_number || 0), 0);
+      form.setFieldsValue({
+        unit_number: maxNumber + 1,
+        unit_type: 'standalone',
       });
     }
-  }, [data, form, isNew]);
+  }, [data, form, isNew, unitList]);
 
   // 保存单元
   const saveMutation = useMutation({
     mutationFn: async (values: UnitFormValues) => {
+      if (!id) throw new Error('项目 ID 缺失');
+
+      const payload: CreateUnitParams = {
+        unit_number: values.unit_number || 1,
+        title: values.title,
+        unit_type: values.unit_type,
+        start_chapter: values.start_chapter,
+        end_chapter: values.end_chapter,
+        settings: values.settings,
+        outline: values.outline,
+      };
+
       if (isNew) {
-        return createUnit(id!, values);
+        return createUnit(id, payload);
       } else {
-        return updateUnit(id!, unitId!, values);
+        return updateUnit(id, unitId!, payload);
       }
     },
     onSuccess: () => {
@@ -183,28 +225,67 @@ export default function UnitEditor() {
           >
             <Card className="settings-card" title={<><FolderOutlined className="card-icon unit" />单元信息</>}>
               <Form.Item
+                name="unit_number"
+                label="单元序号"
+                rules={[{ required: true, message: '请输入单元序号' }]}
+              >
+                <Input
+                  type="number"
+                  placeholder="请输入单元序号"
+                  min={1}
+                  disabled={!isNew}
+                />
+              </Form.Item>
+
+              <Form.Item
                 name="title"
                 label="单元标题"
                 rules={[
                   { required: true, message: '请输入单元标题' },
-                  { min: 1, max: 100, message: '标题长度在 1-100 个字符之间' }
+                  { min: 1, max: 200, message: '标题长度在 1-200 个字符之间' }
                 ]}
               >
                 <Input placeholder="请输入单元标题" />
               </Form.Item>
 
               <Form.Item
-                name="description"
-                label="单元描述"
-                tooltip="单元的故事梗概或说明"
-                rules={[{ max: 2000, message: '描述不超过 2000 字' }]}
+                name="unit_type"
+                label="单元类型"
+                tooltip="单元与主线剧情的关系"
               >
-                <TextArea
-                  rows={6}
-                  showCount
-                  maxLength={2000}
-                  placeholder="描述本单元的故事梗概、主要事件和人物变化..."
-                />
+                <Select placeholder="请选择单元类型">
+                  {unitTypeOptions.map((opt) => (
+                    <Select.Option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+
+              <Divider />
+
+              <Form.Item
+                name="start_chapter"
+                label="起始章节号"
+                tooltip="本单元包含的第一个章节号"
+              >
+                <Input type="number" placeholder="请输入起始章节号" min={1} />
+              </Form.Item>
+
+              <Form.Item
+                name="end_chapter"
+                label="结束章节号"
+                tooltip="本单元包含的最后一个章节号"
+              >
+                <Input type="number" placeholder="请输入结束章节号" min={1} />
+              </Form.Item>
+
+              <Form.Item
+                name="outline"
+                label="单元大纲"
+                tooltip="本单元的故事梗概"
+              >
+                <TextArea rows={6} placeholder="描述本单元的故事梗概、主要事件和人物变化..." />
               </Form.Item>
             </Card>
           </Form>

@@ -22,6 +22,8 @@ export interface ContinueRequest {
   content: string;
   outline?: string;
   length?: 'short' | 'medium' | 'long';
+  settings?: Record<string, unknown>;  // 世界观设定
+  characters?: string;  // 角色信息
 }
 
 export interface RewriteRequest {

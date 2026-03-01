@@ -31,6 +31,8 @@ async def create_chapter(
 
     service = ChapterService(db)
     chapter = await service.create_chapter(project_id, chapter_data, unit_id)
+    # 调试日志
+    print(f"[DEBUG] Created chapter - id: {chapter.id}, chapter_number: {chapter.chapter_number}, type(id): {type(chapter.id)}")
     return chapter
 
 

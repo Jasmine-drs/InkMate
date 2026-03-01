@@ -157,8 +157,14 @@ export default function UnitList() {
                           <FolderOutlined />
                         </div>
                       }
-                      title={<Text strong className="unit-name">{unit.title}</Text>}
-                      description={unit.description || '暂无描述'}
+                      title={
+                        <Typography.Text strong className="unit-name">单元{unit.unit_number}: {unit.title}</Typography.Text>
+                      }
+                      description={
+                        (unit.outline as Record<string, string> | undefined)?.brief ||
+                        (unit.outline as Record<string, string> | undefined)?.summary ||
+                        '暂无描述'
+                      }
                     />
                   </List.Item>
                 )}

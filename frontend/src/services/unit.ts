@@ -6,26 +6,36 @@ import { api } from '@/utils/request';
 export interface UnitData {
   id: string;
   project_id: string;
+  unit_number: number;
   title: string;
-  description?: string;
+  unit_type?: string;
+  start_chapter?: number;
+  end_chapter?: number;
   settings?: Record<string, unknown>;
-  sort_order?: number;
+  outline?: Record<string, unknown>;
+  status?: string;
   created_at?: string;
   updated_at?: string;
 }
 
 export interface CreateUnitParams {
-  title: string;
-  description?: string;
+  unit_number: number;
+  title?: string;
+  unit_type?: string;
+  start_chapter?: number;
+  end_chapter?: number;
   settings?: Record<string, unknown>;
-  sort_order?: number;
+  outline?: Record<string, unknown>;
 }
 
 export interface UpdateUnitParams {
   title?: string;
-  description?: string;
+  unit_type?: string;
+  start_chapter?: number;
+  end_chapter?: number;
   settings?: Record<string, unknown>;
-  sort_order?: number;
+  outline?: Record<string, unknown>;
+  status?: string;
 }
 
 /**

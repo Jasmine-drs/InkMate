@@ -9,7 +9,7 @@ const { TextArea } = Input;
 interface AIActionModalProps {
   visible: boolean;
   selectedText: string;
-  action: 'rewrite' | 'expand' | 'polish';
+  action: 'rewrite' | 'expand';
   onClose: () => void;
   onConfirm: (instruction: string) => Promise<void>;
 }
@@ -17,13 +17,11 @@ interface AIActionModalProps {
 const actionTitles: Record<string, string> = {
   rewrite: 'AI 改写',
   expand: 'AI 扩写',
-  polish: 'AI 润色',
 };
 
 const actionPlaceholders: Record<string, string> = {
   rewrite: '请输入改写要求，例如：让语言更生动、改成第一人称叙述...',
   expand: '请输入扩写方向，例如：增加环境描写、细化人物心理活动...',
-  polish: '请输入润色要求，例如：优化语句流畅度、增强画面感...',
 };
 
 export function AIActionModal({ visible, selectedText, action, onClose, onConfirm }: AIActionModalProps) {
