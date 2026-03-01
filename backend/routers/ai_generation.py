@@ -23,15 +23,19 @@ async def check_rate_limit(user_id: str) -> bool:
     """
     检查用户速率限制（基于 Redis）
     返回 True 如果未超限，False 如果已超限
+    如果 Redis 不可用，返回 True（不限制）
     """
     try:
         import redis
 
         # 创建同步 Redis 连接用于速率限制
+        # 尝试不同的密码配置
+        redis_url = settings.REDIS_URL
         r = redis.from_url(
-            settings.REDIS_URL.replace("redis://", "redis://"),
+            redis_url,
             encoding="utf-8",
-            decode_responses=True
+            decode_responses=True,
+            socket_connect_timeout=5,
         )
 
         key = f"rate_limit:ai:{user_id}"
@@ -54,7 +58,8 @@ async def check_rate_limit(user_id: str) -> bool:
         r.close()
         return True
     except Exception as e:
-        logger.warning(f"速率限制检查失败：{e}")
+        # Redis 不可用时，不限制请求，记录日志
+        logger.debug(f"速率限制检查失败：{e}")
         # 如果 Redis 不可用，不限制请求
         return True
 

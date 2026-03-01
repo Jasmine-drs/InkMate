@@ -4,6 +4,7 @@ AI 服务客户端 - OpenAI API 集成
 import json
 from typing import AsyncGenerator, Optional, Dict, Any, List
 from loguru import logger
+from fastapi import HTTPException, status
 
 try:
     import httpx
@@ -27,13 +28,18 @@ class AIClient:
     async def _get_client(self) -> httpx.AsyncClient:
         """获取 HTTP 客户端"""
         if self._client is None:
+            headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+            }
+            # ModelScope API 需要额外的 User-Agent
+            if "modelscope.cn" in self.base_url:
+                headers["X-DashScope-User"] = "novel-writer"
+
             self._client = httpx.AsyncClient(
                 base_url=self.base_url,
                 timeout=httpx.Timeout(60.0, read=120.0),
-                headers={
-                    "Authorization": f"Bearer {self.api_key}",
-                    "Content-Type": "application/json",
-                }
+                headers=headers
             )
         return self._client
 
@@ -77,19 +83,40 @@ class AIClient:
         client = await self._get_client()
         messages = self._build_chat_prompt(system_prompt, prompt, context)
 
+        # 确保温度在有效范围内 (0-2)
+        effective_temp = min(max(temperature or self.temperature, 0.0), 2.0)
+
         try:
+            request_data = {
+                "model": self.model,
+                "messages": messages,
+                "temperature": effective_temp,
+                "max_tokens": max_tokens or self.max_tokens,
+            }
+            logger.debug(f"AI 请求：model={self.model}, messages_count={len(messages)}, temperature={effective_temp}")
+
             response = await client.post(
                 "/chat/completions",
-                json={
-                    "model": self.model,
-                    "messages": messages,
-                    "temperature": temperature or self.temperature,
-                    "max_tokens": max_tokens or self.max_tokens,
-                }
+                json=request_data,
             )
-            response.raise_for_status()
+
+            if not response.is_success:
+                error_body = response.text
+                logger.error(f"AI API 错误：status={response.status_code}, body={error_body}")
+                # 返回通用错误信息，不泄露 API 细节
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"AI 服务响应错误 (HTTP {response.status_code})"
+                )
+
             data = response.json()
+            if not data.get("choices") or not data["choices"][0].get("message"):
+                logger.error(f"AI 响应格式异常：{data}")
+                raise ValueError("AI 响应格式异常")
+
             return data["choices"][0]["message"]["content"]
+        except HTTPException:
+            raise
         except Exception as e:
             logger.error(f"AI 生成失败：{e}")
             raise
@@ -110,6 +137,9 @@ class AIClient:
         client = await self._get_client()
         messages = self._build_chat_prompt(system_prompt, prompt, context)
 
+        # 确保温度在有效范围内 (0-2)
+        effective_temp = min(max(temperature or self.temperature, 0.0), 2.0)
+
         try:
             async with client.stream(
                 "POST",
@@ -117,12 +147,17 @@ class AIClient:
                 json={
                     "model": self.model,
                     "messages": messages,
-                    "temperature": temperature or self.temperature,
+                    "temperature": effective_temp,
                     "max_tokens": self.max_tokens,
                     "stream": True,
                 }
             ) as response:
-                response.raise_for_status()
+                if not response.is_success:
+                    error_body = await response.aread()
+                    logger.error(f"AI 流式 API 错误：status={response.status_code}, body={error_body.decode()}")
+                    yield f"data: {json.dumps({'error': 'AI 生成失败'})}\n\n"
+                    return
+
                 async for line in response.aiter_lines():
                     if line.startswith("data: "):
                         data = line[6:]

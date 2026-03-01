@@ -191,6 +191,22 @@ export default function Editor() {
     }
   };
 
+  // 查看大纲处理
+  const handleViewOutline = () => {
+    if (projectId) {
+      // TODO: 导航到大纲页面或打开大纲弹窗
+      message.info('大纲功能开发中...');
+    }
+  };
+
+  // 查看角色处理
+  const handleViewCharacters = () => {
+    if (projectId) {
+      // TODO: 导航到角色页面或打开角色弹窗
+      message.info('角色功能开发中...');
+    }
+  };
+
   return (
     <Layout className="editor-layout">
       <Header className="editor-header">
@@ -265,7 +281,7 @@ export default function Editor() {
             icon={<SaveOutlined />}
             onClick={handleSaveNow}
             loading={isSaving}
-            disabled={!chapterId || chapterId === 'new'}
+            disabled={!projectId}
           >
             {isSaving ? '保存中...' : '保存'}
           </Button>
@@ -338,10 +354,10 @@ export default function Editor() {
 
           {/* 快速操作 */}
           <div className="quick-actions">
-            <Button className="quick-btn" block>
+            <Button className="quick-btn" block onClick={handleViewOutline}>
               📖 查看本章大纲
             </Button>
-            <Button className="quick-btn" block>
+            <Button className="quick-btn" block onClick={handleViewCharacters}>
               👥 查看出场角色
             </Button>
             <Button

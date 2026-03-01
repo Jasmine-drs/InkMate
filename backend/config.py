@@ -29,9 +29,9 @@ class Settings(BaseSettings):
     # AI 模型配置
     OPENAI_API_KEY: Optional[str] = None
     OPENAI_BASE_URL: Optional[str] = None
-    GENERATION_MODEL: str = "gpt-4o-mini"  # 默认生成模型
+    GENERATION_MODEL: str = "Qwen/Qwen2.5-7B-Instruct"  # 默认生成模型 (ModelScope)
     EMBEDDING_MODEL: str = "text-embedding-3-small"  # 默认嵌入模型
-    MAX_TOKENS: int = 4096  # 最大生成 token 数
+    MAX_TOKENS: int = 2048  # 最大生成 token 数
     TEMPERATURE: float = 0.7  # 生成温度
 
     # 速率限制配置
