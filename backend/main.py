@@ -7,13 +7,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
 from db import init_db, close_db
-from utils import init_redis, close_redis, init_milvus, close_milvus, create_collections
+from utils import init_redis, close_redis, init_milvus, close_milvus, create_collections, init_ai, close_ai
 from routers.user import router as user_router
 from routers.project import router as project_router
 from routers.chapter import router as chapter_router
 from routers.unit import router as unit_router
 from routers.character import router as character_router
 from routers.outline import router as outline_router
+from routers.ai_generation import router as ai_router
 
 
 @asynccontextmanager
@@ -30,6 +31,9 @@ async def lifespan(app: FastAPI):
     init_milvus()
     create_collections()
 
+    logger.info("初始化 AI 客户端...")
+    await init_ai()
+
     logger.info("应用启动完成")
 
     yield
@@ -43,6 +47,9 @@ async def lifespan(app: FastAPI):
 
     logger.info("关闭 Milvus 连接...")
     close_milvus()
+
+    logger.info("关闭 AI 客户端...")
+    await close_ai()
 
     logger.info("应用已关闭")
 
@@ -70,6 +77,7 @@ app.include_router(chapter_router, prefix="/api")
 app.include_router(unit_router, prefix="/api")
 app.include_router(character_router, prefix="/api")
 app.include_router(outline_router, prefix="/api")
+app.include_router(ai_router, prefix="/api")
 
 
 @app.get("/")
