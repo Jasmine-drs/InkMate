@@ -43,7 +43,7 @@ export const createChapter = async (
   data: CreateChapterParams,
   unitId?: string | null
 ): Promise<ChapterData> => {
-  return api.post(`/api/projects/${projectId}/chapters`, data, {
+  return api.post(`/projects/${projectId}/chapters`, data, {
     params: unitId ? { unit_id: unitId } : undefined,
   });
 };
@@ -56,7 +56,7 @@ export const getChapterList = async (
   page = 1,
   pageSize = 20
 ): Promise<{ items: ChapterData[]; total: number; page: number; page_size: number }> => {
-  return api.get(`/api/projects/${projectId}/chapters`, {
+  return api.get(`/projects/${projectId}/chapters`, {
     params: { page, page_size: pageSize },
   });
 };
@@ -68,7 +68,7 @@ export const getChapter = async (
   projectId: string,
   chapterNum: number
 ): Promise<ChapterData> => {
-  return api.get(`/api/projects/${projectId}/chapters/${chapterNum}`);
+  return api.get(`/projects/${projectId}/chapters/${chapterNum}`);
 };
 
 /**
@@ -96,7 +96,7 @@ export const updateChapter = async (
   data: UpdateChapterParams,
   createVersion = true
 ): Promise<ChapterData> => {
-  return api.put(`/api/projects/${projectId}/chapters/${chapterId}`, data, {
+  return api.put(`/projects/${projectId}/chapters/${chapterId}`, data, {
     params: { create_version: createVersion },
   });
 };
@@ -108,7 +108,7 @@ export const deleteChapter = async (
   projectId: string,
   chapterId: string
 ): Promise<void> => {
-  return api.delete(`/api/projects/${projectId}/chapters/${chapterId}`);
+  return api.delete(`/projects/${projectId}/chapters/${chapterId}`);
 };
 
 /**
@@ -120,7 +120,7 @@ export const getChapterVersions = async (
   page = 1,
   pageSize = 20
 ): Promise<{ items: ChapterVersionData[]; total: number; page: number; page_size: number }> => {
-  return api.get(`/api/projects/${projectId}/chapters/${chapterId}/versions`, {
+  return api.get(`/projects/${projectId}/chapters/${chapterId}/versions`, {
     params: { page, page_size: pageSize },
   });
 };
@@ -133,7 +133,7 @@ export const getChapterVersion = async (
   chapterId: string,
   versionNum: number
 ): Promise<ChapterVersionData> => {
-  return api.get(`/api/projects/${projectId}/chapters/${chapterId}/versions/${versionNum}`);
+  return api.get(`/projects/${projectId}/chapters/${chapterId}/versions/${versionNum}`);
 };
 
 /**

@@ -2,6 +2,7 @@
 应用配置
 """
 from pydantic_settings import BaseSettings
+from pydantic import Field
 from typing import Optional
 
 
@@ -21,7 +22,7 @@ class Settings(BaseSettings):
     MILVUS_PORT: int = 19530
 
     # JWT 配置
-    SECRET_KEY: str = "your-secret-key-change-in-production"
+    SECRET_KEY: str = Field(..., description="JWT secret key, must be set via environment variable")
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 天
 
@@ -32,6 +33,10 @@ class Settings(BaseSettings):
     EMBEDDING_MODEL: str = "text-embedding-3-small"  # 默认嵌入模型
     MAX_TOKENS: int = 4096  # 最大生成 token 数
     TEMPERATURE: float = 0.7  # 生成温度
+
+    # 速率限制配置
+    RATE_LIMIT_REQUESTS: int = 10  # 每分钟最大请求数
+    RATE_LIMIT_WINDOW: int = 60  # 时间窗口（秒）
 
     class Config:
         env_file = ".env"

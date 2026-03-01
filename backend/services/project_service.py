@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from models.project import Project
 from schemas.project import ProjectCreate, ProjectUpdate
+from loguru import logger
 
 
 class ProjectService:
@@ -68,13 +69,35 @@ class ProjectService:
         return project
 
     async def delete_project(self, project_id: str) -> bool:
-        """删除项目"""
+        """删除项目（包括 Milvus 中的向量数据）"""
         result = await self.db.execute(
             select(Project).where(Project.id == project_id)
         )
         project = result.scalar_one_or_none()
         if not project:
             return False
+
+        # 清理 Milvus 中的向量数据
+        try:
+            from utils.milvus_client import get_milvus
+            milvus = get_milvus()
+
+            # 删除章节嵌入
+            if milvus.has_collection("chapter_embeddings"):
+                milvus.delete(
+                    collection_name="chapter_embeddings",
+                    filter=f"project_id == '{project_id}'"
+                )
+
+            # 删除设定嵌入
+            if milvus.has_collection("setting_embeddings"):
+                milvus.delete(
+                    collection_name="setting_embeddings",
+                    filter=f"project_id == '{project_id}'"
+                )
+        except Exception as e:
+            # Milvus 清理失败不影响数据库删除，仅记录日志
+            logger.warning(f"清理 Milvus 向量数据失败：{e}")
 
         await self.db.delete(project)
         await self.db.commit()

@@ -101,6 +101,19 @@ async def delete_project(
 ):
     """删除项目"""
     service = ProjectService(db)
+    # 获取项目并验证权限
+    project = await service.get_project(project_id)
+    if not project:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="项目不存在"
+        )
+    # 验证项目所有权
+    if project.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权删除该项目"
+        )
     success = await service.delete_project(project_id)
     if not success:
         raise HTTPException(

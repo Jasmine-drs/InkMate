@@ -2,15 +2,77 @@
 AI 生成路由
 """
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from db.session import get_db
 from routers.auth import get_current_user
 from models.user import User
 from utils.ai_client import get_ai_client
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, AsyncGenerator
+import json
+import time
+from loguru import logger
+from config import settings
+from config import settings
 
 router = APIRouter(prefix="/ai", tags=["AI 生成"])
+
+
+async def check_rate_limit(user_id: str) -> bool:
+    """
+    检查用户速率限制（基于 Redis）
+    返回 True 如果未超限，False 如果已超限
+    """
+    try:
+        import redis
+
+        # 创建同步 Redis 连接用于速率限制
+        r = redis.from_url(
+            settings.REDIS_URL.replace("redis://", "redis://"),
+            encoding="utf-8",
+            decode_responses=True
+        )
+
+        key = f"rate_limit:ai:{user_id}"
+        current_time = int(time.time())
+        window_start = current_time - settings.RATE_LIMIT_WINDOW
+
+        # 移除时间窗口外的记录
+        r.zremrangebyscore(key, 0, window_start)
+
+        # 计算当前窗口内的请求数
+        request_count = r.zcard(key)
+
+        if request_count >= settings.RATE_LIMIT_REQUESTS:
+            r.close()
+            return False
+
+        # 添加当前请求
+        r.zadd(key, {str(current_time): current_time})
+        r.expire(key, settings.RATE_LIMIT_WINDOW * 2)
+        r.close()
+        return True
+    except Exception as e:
+        logger.warning(f"速率限制检查失败：{e}")
+        # 如果 Redis 不可用，不限制请求
+        return True
+
+
+def rate_limit_decorator(func):
+    """速率限制装饰器"""
+    from functools import wraps
+
+    @wraps(func)
+    async def wrapper(*args, current_user: User = Depends(get_current_user), **kwargs):
+        if not await check_rate_limit(current_user.id):
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=f"请求过于频繁，请稍后再试（限制：{settings.RATE_LIMIT_REQUESTS} 次/分钟）"
+            )
+        return await func(*args, current_user=current_user, **kwargs)
+
+    return wrapper
 
 
 class GenerateRequest(BaseModel):
@@ -60,6 +122,13 @@ async def generate(
     current_user: User = Depends(get_current_user),
 ):
     """通用文本生成"""
+    # 速率限制检查
+    if not await check_rate_limit(current_user.id):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"请求过于频繁，请稍后再试（限制：{settings.RATE_LIMIT_REQUESTS} 次/分钟）"
+        )
+
     ai = get_ai_client()
     try:
         content = await ai.generate(
@@ -70,9 +139,10 @@ async def generate(
         )
         return {"content": content}
     except Exception as e:
+        logger.error(f"AI 生成失败：{e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"生成失败：{str(e)}"
+            detail="AI 生成失败，请稍后重试"
         )
 
 
@@ -82,6 +152,13 @@ async def generate_chapter(
     current_user: User = Depends(get_current_user),
 ):
     """生成章节内容"""
+    # 速率限制检查
+    if not await check_rate_limit(current_user.id):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"请求过于频繁，请稍后再试（限制：{settings.RATE_LIMIT_REQUESTS} 次/分钟）"
+        )
+
     ai = get_ai_client()
     try:
         content = await ai.generate_chapter(
@@ -93,9 +170,10 @@ async def generate_chapter(
         )
         return {"content": content}
     except Exception as e:
+        logger.error(f"AI 生成章节失败：{e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"生成失败：{str(e)}"
+            detail="AI 生成章节失败，请稍后重试"
         )
 
 
@@ -105,6 +183,13 @@ async def continue_writing(
     current_user: User = Depends(get_current_user),
 ):
     """AI 续写"""
+    # 速率限制检查
+    if not await check_rate_limit(current_user.id):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"请求过于频繁，请稍后再试（限制：{settings.RATE_LIMIT_REQUESTS} 次/分钟）"
+        )
+
     ai = get_ai_client()
     try:
         content = await ai.continue_writing(
@@ -114,9 +199,10 @@ async def continue_writing(
         )
         return {"content": content}
     except Exception as e:
+        logger.error(f"AI 续写失败：{e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"续写失败：{str(e)}"
+            detail="AI 续写失败，请稍后重试"
         )
 
 
@@ -126,6 +212,13 @@ async def rewrite(
     current_user: User = Depends(get_current_user),
 ):
     """AI 改写"""
+    # 速率限制检查
+    if not await check_rate_limit(current_user.id):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"请求过于频繁，请稍后再试（限制：{settings.RATE_LIMIT_REQUESTS} 次/分钟）"
+        )
+
     ai = get_ai_client()
     try:
         content = await ai.rewrite(
@@ -134,9 +227,10 @@ async def rewrite(
         )
         return {"content": content}
     except Exception as e:
+        logger.error(f"AI 改写失败：{e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"改写失败：{str(e)}"
+            detail="AI 改写失败，请稍后重试"
         )
 
 
@@ -146,6 +240,13 @@ async def expand(
     current_user: User = Depends(get_current_user),
 ):
     """AI 扩写"""
+    # 速率限制检查
+    if not await check_rate_limit(current_user.id):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"请求过于频繁，请稍后再试（限制：{settings.RATE_LIMIT_REQUESTS} 次/分钟）"
+        )
+
     ai = get_ai_client()
     try:
         content = await ai.expand(
@@ -154,7 +255,58 @@ async def expand(
         )
         return {"content": content}
     except Exception as e:
+        logger.error(f"AI 扩写失败：{e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"扩写失败：{str(e)}"
+            detail="AI 扩写失败，请稍后重试"
         )
+
+
+async def _generate_stream_content(
+    prompt: str,
+    system_prompt: str,
+    context: Optional[str],
+    temperature: float,
+) -> AsyncGenerator[str, None]:
+    """流式生成内容生成器"""
+    ai = get_ai_client()
+    try:
+        # 使用 AI 客户端的流式生成方法
+        async for token in ai.generate_stream(
+            prompt=prompt,
+            system_prompt=system_prompt,
+            context=context,
+            temperature=temperature,
+        ):
+            yield f"data: {json.dumps({'token': token})}\n\n"
+    except Exception as e:
+        yield f"data: {json.dumps({'error': str(e)})}\n\n"
+    yield "data: [DONE]\n\n"
+
+
+@router.post("/generate/stream", summary="流式生成")
+async def generate_stream(
+    request: GenerateRequest,
+    current_user: User = Depends(get_current_user),
+):
+    """流式文本生成（SSE 格式）"""
+    # 速率限制检查
+    if not await check_rate_limit(current_user.id):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"请求过于频繁，请稍后再试（限制：{settings.RATE_LIMIT_REQUESTS} 次/分钟）"
+        )
+
+    return StreamingResponse(
+        _generate_stream_content(
+            prompt=request.prompt,
+            system_prompt=request.system_prompt or "你是一个专业的小说创作助手。",
+            context=request.context,
+            temperature=request.temperature or 0.7,
+        ),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+        },
+    )

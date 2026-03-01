@@ -102,9 +102,11 @@ class ChapterService:
         for key, value in update_data.items():
             setattr(chapter, key, value)
 
-        # 更新字数统计
+        # 更新字数统计 - 使用纯文本字数（移除 HTML 标签）
         if chapter.content:
-            chapter.word_count = len(chapter.content)
+            import re
+            text_content = re.sub(r'<[^>]+>', '', chapter.content)
+            chapter.word_count = len(text_content)
 
         await self.db.commit()
         await self.db.refresh(chapter)

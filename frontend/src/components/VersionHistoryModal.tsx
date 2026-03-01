@@ -18,6 +18,7 @@ import {
   RollbackOutlined,
   FileTextOutlined,
 } from '@ant-design/icons';
+import DOMPurify from 'dompurify';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/zh-cn';
@@ -173,7 +174,7 @@ export function VersionHistoryModal({
                   <div
                     className="content-preview"
                     dangerouslySetInnerHTML={{
-                      __html: selectedVersion.content || '<p>无内容</p>',
+                      __html: DOMPurify.sanitize(selectedVersion.content || '<p>无内容</p>'),
                     }}
                   />
                 </div>

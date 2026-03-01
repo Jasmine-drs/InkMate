@@ -42,35 +42,35 @@ export interface GenerateResponse {
  * 通用生成
  */
 export const generate = async (data: GenerateRequest): Promise<GenerateResponse> => {
-  return api.post('/api/ai/generate', data);
+  return api.post('/ai/generate', data);
 };
 
 /**
  * 生成章节
  */
 export const generateChapter = async (data: ChapterGenerateRequest): Promise<GenerateResponse> => {
-  return api.post('/api/ai/generate/chapter', data);
+  return api.post('/ai/generate/chapter', data);
 };
 
 /**
  * AI 续写
  */
 export const continueWriting = async (data: ContinueRequest): Promise<GenerateResponse> => {
-  return api.post('/api/ai/continue', data);
+  return api.post('/ai/continue', data);
 };
 
 /**
  * AI 改写
  */
 export const rewrite = async (data: RewriteRequest): Promise<GenerateResponse> => {
-  return api.post('/api/ai/rewrite', data);
+  return api.post('/ai/rewrite', data);
 };
 
 /**
  * AI 扩写
  */
 export const expand = async (data: ExpandRequest): Promise<GenerateResponse> => {
-  return api.post('/api/ai/expand', data);
+  return api.post('/ai/expand', data);
 };
 
 /**
