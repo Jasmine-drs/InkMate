@@ -153,6 +153,7 @@ export function Toolbar({ editor, onSave, onAIContinue, isEmpty = false }: Toolb
             size="small"
             icon={<RobotOutlined />}
             onClick={onAIContinue}
+            disabled={isEmpty}
             className="ai-continue-btn"
           >
             AI 续写
@@ -165,6 +166,7 @@ export function Toolbar({ editor, onSave, onAIContinue, isEmpty = false }: Toolb
             size="small"
             icon={<SaveOutlined />}
             onClick={onSave}
+            disabled={isEmpty}
             className="save-btn"
           >
             保存

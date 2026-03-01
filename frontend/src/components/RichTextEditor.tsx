@@ -54,9 +54,13 @@ export function RichTextEditor({ content, onChange, onSave, onAIContinue }: Rich
     return null;
   }
 
+  // 根据字符数判断内容是否为空
+  const characterCount = editor.storage.characterCount.characters();
+  const isEmpty = characterCount === 0;
+
   return (
     <div className="rich-text-editor">
-      <Toolbar editor={editor} onSave={onSave} onAIContinue={onAIContinue} />
+      <Toolbar editor={editor} onSave={onSave} onAIContinue={onAIContinue} isEmpty={isEmpty} />
       <EditorContent editor={editor} className="editor-content" />
     </div>
   );
