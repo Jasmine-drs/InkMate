@@ -183,10 +183,11 @@
 .save-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-  transform: none;
-  background: linear-gradient(135deg, rgba(100, 100, 100, 0.5) 0%, rgba(80, 80, 80, 0.5) 100%);
-  box-shadow: none;
-  border: 1px solid rgba(100, 100, 100, 0.3);
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.save-btn:disabled .anticon {
+  color: rgba(255, 255, 255, 0.85) !important;
 }
 
 /* ========================================

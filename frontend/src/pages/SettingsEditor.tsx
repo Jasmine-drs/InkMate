@@ -175,7 +175,7 @@ export default function SettingsEditor() {
   };
 
   // AI 辅助生成设定
-  const handleAIGenerate = async (field: string) => {
+  const handleAIGenerate = async (field: keyof SettingsFormValues) => {
     const fieldLabels: Record<string, string> = {
       worldView: '世界观',
       timeSetting: '时代设定',
@@ -287,7 +287,38 @@ export default function SettingsEditor() {
             onValuesChange={handleValuesChange}
           >
             {/* 核心设定 */}
-            <Card className="settings-card" title={<><FireOutlined className="card-icon core" />核心设定</>}>
+            <Card
+              className="settings-card"
+              title={<><FireOutlined className="card-icon core" />核心设定</>}
+              extra={
+                <Space size="small">
+                  <Button
+                    type="primary"
+                    size="small"
+                    icon={<RobotOutlined />}
+                    onClick={() => handleAIGenerate('worldView')}
+                  >
+                    AI 世界观
+                  </Button>
+                  <Button
+                    type="primary"
+                    size="small"
+                    icon={<RobotOutlined />}
+                    onClick={() => handleAIGenerate('timeSetting')}
+                  >
+                    AI 时代
+                  </Button>
+                  <Button
+                    type="primary"
+                    size="small"
+                    icon={<RobotOutlined />}
+                    onClick={() => handleAIGenerate('locationSetting')}
+                  >
+                    AI 地点
+                  </Button>
+                </Space>
+              }
+            >
               <Form.Item
                 name="worldView"
                 label="世界观"
@@ -338,7 +369,30 @@ export default function SettingsEditor() {
             </Card>
 
             {/* 力量体系 */}
-            <Card className="settings-card" title={<><BookOutlined className="card-icon power" />力量体系</>}>
+            <Card
+              className="settings-card"
+              title={<><BookOutlined className="card-icon power" />力量体系</>}
+              extra={
+                <Space size="small">
+                  <Button
+                    type="primary"
+                    size="small"
+                    icon={<RobotOutlined />}
+                    onClick={() => handleAIGenerate('powerSystem')}
+                  >
+                    AI 力量体系
+                  </Button>
+                  <Button
+                    type="primary"
+                    size="small"
+                    icon={<RobotOutlined />}
+                    onClick={() => handleAIGenerate('magic')}
+                  >
+                    AI 魔法
+                  </Button>
+                </Space>
+              }
+            >
               <Form.Item
                 name="powerSystem"
                 label="力量体系"
@@ -373,7 +427,38 @@ export default function SettingsEditor() {
             </Card>
 
             {/* 社会结构 */}
-            <Card className="settings-card" title={<><UserOutlined className="card-icon social" />社会结构</>}>
+            <Card
+              className="settings-card"
+              title={<><UserOutlined className="card-icon social" />社会结构</>}
+              extra={
+                <Space size="small">
+                  <Button
+                    type="primary"
+                    size="small"
+                    icon={<RobotOutlined />}
+                    onClick={() => handleAIGenerate('socialStructure')}
+                  >
+                    AI 社会
+                  </Button>
+                  <Button
+                    type="primary"
+                    size="small"
+                    icon={<RobotOutlined />}
+                    onClick={() => handleAIGenerate('technology')}
+                  >
+                    AI 科技
+                  </Button>
+                  <Button
+                    type="primary"
+                    size="small"
+                    icon={<RobotOutlined />}
+                    onClick={() => handleAIGenerate('culture')}
+                  >
+                    AI 文化
+                  </Button>
+                </Space>
+              }
+            >
               <Form.Item
                 name="socialStructure"
                 label="社会结构"
@@ -424,7 +509,30 @@ export default function SettingsEditor() {
             </Card>
 
             {/* 背景设定 */}
-            <Card className="settings-card" title={<><EnvironmentOutlined className="card-icon background" />背景设定</>}>
+            <Card
+              className="settings-card"
+              title={<><EnvironmentOutlined className="card-icon background" />背景设定</>}
+              extra={
+                <Space size="small">
+                  <Button
+                    type="primary"
+                    size="small"
+                    icon={<RobotOutlined />}
+                    onClick={() => handleAIGenerate('history')}
+                  >
+                    AI 历史
+                  </Button>
+                  <Button
+                    type="primary"
+                    size="small"
+                    icon={<RobotOutlined />}
+                    onClick={() => handleAIGenerate('creatures')}
+                  >
+                    AI 生物
+                  </Button>
+                </Space>
+              }
+            >
               <Form.Item
                 name="history"
                 label="历史背景"
@@ -459,7 +567,22 @@ export default function SettingsEditor() {
             </Card>
 
             {/* 其他设定 */}
-            <Card className="settings-card" title={<><SettingOutlined className="card-icon misc" />其他设定</>}>
+            <Card
+              className="settings-card"
+              title={<><SettingOutlined className="card-icon misc" />其他设定</>}
+              extra={
+                <Space size="small">
+                  <Button
+                    type="primary"
+                    size="small"
+                    icon={<RobotOutlined />}
+                    onClick={() => handleAIGenerate('other')}
+                  >
+                    AI 其他
+                  </Button>
+                </Space>
+              }
+            >
               <Form.Item
                 name="other"
                 label="其他设定"
