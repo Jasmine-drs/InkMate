@@ -27,6 +27,7 @@ import { useAutoSave } from '@/hooks/useAutoSave';
 import { getChapter, updateChapter, getChapterById, createChapter, getNextChapterNumber } from '@/services/chapter';
 import { VersionHistoryModal } from '@/components/VersionHistoryModal';
 import { continueWritingStream } from '@/services/ai';
+import { ROUTES } from '@/pages/SettingsEditor';
 import './Editor.css';
 
 const { Header, Content, Sider } = Layout;
@@ -234,7 +235,7 @@ export default function Editor() {
     <Layout className="editor-layout">
       <Header className="editor-header">
         <div className="header-left">
-          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(`/project/${projectId}`)}>
+          <Button icon={<ArrowLeftOutlined />} onClick={() => projectId && navigate(ROUTES.PROJECT_DETAIL(projectId))}>
             返回
           </Button>
           <Divider type="vertical" className="header-divider" />

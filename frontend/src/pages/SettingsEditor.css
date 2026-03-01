@@ -1,13 +1,32 @@
 /* 世界观设定编辑页面样式 */
+
+/* CSS 变量定义 */
 .settings-editor-layout {
+  --color-bg-primary: #0a0e27;
+  --color-bg-secondary: #1a1f3a;
+  --color-text-primary: #fff;
+  --color-text-secondary: rgba(255, 255, 255, 0.85);
+  --color-text-tertiary: rgba(255, 255, 255, 0.45);
+  --color-text-quaternary: rgba(255, 255, 255, 0.3);
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-accent: #1890ff;
+  --color-accent-hover: #40a9ff;
+  --card-bg: rgba(255, 255, 255, 0.03);
+  --card-bg-hover: rgba(255, 255, 255, 0.05);
+  --color-icon-core: #f5222d;
+  --color-icon-power: #722ed1;
+  --color-icon-social: #1890ff;
+  --color-icon-background: #52c41a;
+  --color-icon-misc: #faad14;
+
   min-height: 100vh;
-  background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+  background: linear-gradient(135deg, var(--color-bg-primary) 0%, var(--color-bg-secondary) 100%);
 }
 
 .settings-header {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--card-bg);
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -22,13 +41,19 @@
 }
 
 .header-title {
-  color: #fff !important;
+  color: var(--color-text-primary) !important;
   margin: 0;
 }
 
 .header-right {
   display: flex;
   align-items: center;
+  gap: 12px;
+}
+
+.unsaved-hint {
+  color: var(--color-text-tertiary);
+  font-size: 13px;
 }
 
 .settings-content {
@@ -38,6 +63,7 @@
 .settings-wrapper {
   max-width: 900px;
   margin: 0 auto;
+  padding: 0 16px;
 }
 
 .settings-form {
@@ -47,21 +73,26 @@
 }
 
 .settings-card {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--card-bg);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
+  transition: border-color 0.3s ease;
+}
+
+.settings-card:hover {
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .settings-card :deep(.ant-card-head) {
   background: rgba(255, 255, 255, 0.02);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--color-border);
   font-size: 16px;
   font-weight: 600;
 }
 
 .settings-card :deep(.ant-card-head-title) {
-  color: #fff;
+  color: var(--color-text-primary);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -72,39 +103,39 @@
 }
 
 .card-icon.core {
-  color: #f5222d;
+  color: var(--color-icon-core);
 }
 
-.card-icon.magic {
-  color: #722ed1;
+.card-icon.power {
+  color: var(--color-icon-power);
 }
 
 .card-icon.social {
-  color: #1890ff;
+  color: var(--color-icon-social);
 }
 
-.card-icon.history {
-  color: #52c41a;
+.card-icon.background {
+  color: var(--color-icon-background);
 }
 
-.card-icon.other {
-  color: #faad14;
+.card-icon.misc {
+  color: var(--color-icon-misc);
 }
 
 .settings-form :deep(.ant-form-item-label > label) {
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--color-text-secondary);
   font-weight: 500;
 }
 
 .settings-form :deep(.ant-form-item-explain) {
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--color-text-tertiary);
   font-size: 12px;
 }
 
 .settings-form :deep(.ant-input) {
   background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
 }
 
 .settings-form :deep(.ant-input:hover) {
@@ -113,28 +144,91 @@
 }
 
 .settings-form :deep(.ant-input:focus) {
-  border-color: #1890ff;
+  border-color: var(--color-accent);
   background: rgba(255, 255, 255, 0.08);
   box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
 }
 
 .settings-form :deep(.ant-input::placeholder) {
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--color-text-quaternary);
 }
 
-/* 深色主题表单提示 */
-.settings-form :deep(.ant-form-item-explain) {
-  color: rgba(255, 255, 255, 0.45);
+.settings-form :deep(.ant-form-item-label > .ant-form-item-required) {
+  color: var(--color-text-secondary);
+}
+
+.settings-form :deep(.ant-input-show-count) {
+  border: none;
+}
+
+.settings-form :deep(.ant-input-count) {
+  color: var(--color-text-tertiary);
+  font-size: 12px;
 }
 
 /* 保存按钮 */
 .settings-header :deep(.ant-btn-primary) {
-  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+  background: linear-gradient(135deg, var(--color-accent) 0%, #096dd9 100%);
   border: none;
 }
 
 .settings-header :deep(.ant-btn-primary:hover) {
-  background: linear-gradient(135deg, #40a9ff 0%, #1890ff 100%);
+  background: linear-gradient(135deg, var(--color-accent-hover) 0%, var(--color-accent) 100%);
+}
+
+/* 加载状态 */
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: calc(100vh - 64px);
+}
+
+.loading-container :deep(.ant-spin-text) {
+  color: var(--color-text-secondary);
+  margin-top: 16px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .settings-header {
+    padding: 0 16px;
+    height: 56px;
+  }
+
+  .header-title {
+    font-size: 16px !important;
+  }
+
+  .settings-content {
+    padding: 16px;
+  }
+
+  .settings-wrapper {
+    padding: 0 8px;
+  }
+
+  .settings-card {
+    border-radius: 8px;
+  }
+
+  .settings-form {
+    gap: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-left {
+    gap: 8px;
+  }
+
+  .header-title {
+    font-size: 14px !important;
+  }
+
+  .unsaved-hint {
+    display: none;
+  }
 }
 
 /* 滚动条样式 */

@@ -15,6 +15,7 @@ import {
   TeamOutlined,
 } from '@ant-design/icons';
 import { getProject } from '@/services/project';
+import { ROUTES } from '@/pages/SettingsEditor';
 import './ProjectDetail.css';
 
 const { Header, Content } = Layout;
@@ -195,9 +196,9 @@ export default function ProjectDetail() {
                       <Button
                         type="primary"
                         className="create-setting-btn"
-                        onClick={() => navigate(`/settings/${id}`)}
+                        onClick={() => id && navigate(ROUTES.SETTINGS_EDITOR(id))}
                       >
-                        <SettingOutlined /> 添加设定
+                        <SettingOutlined /> 编辑世界观设定
                       </Button>
                     </div>
                   </div>
