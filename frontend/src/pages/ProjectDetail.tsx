@@ -204,6 +204,33 @@ export default function ProjectDetail() {
                   </div>
                 ),
               },
+              {
+                key: 'outlines',
+                label: (
+                  <div className="tab-label">
+                    <BookOutlined />
+                    <span>大纲管理</span>
+                  </div>
+                ),
+                children: (
+                  <div className="tab-content">
+                    <div className="empty-module">
+                      <div className="module-icon outlines">
+                        <BookOutlined />
+                      </div>
+                      <Title level={5}>暂无大纲</Title>
+                      <Text className="module-text">创建故事大纲，规划剧情发展</Text>
+                      <Button
+                        type="primary"
+                        className="create-outline-btn"
+                        onClick={() => navigate(`/project/${id}/outlines`)}
+                      >
+                        <BookOutlined /> 管理大纲
+                      </Button>
+                    </div>
+                  </div>
+                ),
+              },
             ]}
           />
         </div>
