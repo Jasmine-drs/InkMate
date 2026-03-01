@@ -59,6 +59,21 @@ async def get_chapters(
     )
 
 
+@router.get("/next-number", response_model=dict, summary="获取下一个章节号")
+async def get_next_chapter_number(
+    project_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """获取下一个可用的章节号"""
+    # 验证项目权限
+    await get_project_with_auth(project_id, db, current_user)
+
+    service = ChapterService(db)
+    next_number = await service.get_next_chapter_number(project_id)
+    return {"next_number": next_number}
+
+
 @router.get("/{chapter_num}", response_model=ChapterResponse, summary="获取章节内容")
 async def get_chapter(
     project_id: str,
@@ -224,18 +239,3 @@ async def get_chapter_version(
             detail="版本不存在"
         )
     return version
-
-
-@router.get("/next-number", response_model=dict, summary="获取下一个章节号")
-async def get_next_chapter_number(
-    project_id: str,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """获取下一个可用的章节号"""
-    # 验证项目权限
-    await get_project_with_auth(project_id, db, current_user)
-
-    service = ChapterService(db)
-    next_number = await service.get_next_chapter_number(project_id)
-    return {"next_number": next_number}
