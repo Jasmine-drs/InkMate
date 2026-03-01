@@ -10,6 +10,8 @@ import Editor from '@/pages/Editor';
 import SettingsEditor from '@/pages/SettingsEditor';
 import CharacterList from '@/pages/CharacterList';
 import CharacterEditor from '@/pages/CharacterEditor';
+import OutlineList from '@/pages/OutlineList';
+import OutlineEditor from '@/pages/OutlineEditor';
 
 export const router = createBrowserRouter([
   {
@@ -43,6 +45,14 @@ export const router = createBrowserRouter([
       {
         path: 'project/:id/character/:characterId',
         element: <CharacterEditor />,
+      },
+      {
+        path: 'project/:id/outlines',
+        element: <OutlineList />,
+      },
+      {
+        path: 'project/:id/outline/:outlineId',
+        element: <OutlineEditor />,
       },
     ],
   },
