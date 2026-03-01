@@ -16,6 +16,36 @@ interface RichTextEditorProps {
   onAIContinue: () => void;
 }
 
+/**
+ * 将纯文本转换为 HTML 段落
+ * 处理换行符，将每个段落包装在 <p> 标签中
+ */
+function textToHtml(text: string): string {
+  if (!text) return '';
+
+  // 按换行符分割成段落
+  const paragraphs = text.split(/\n+/).filter(p => p.trim() !== '');
+
+  // 将每个段落包装在 <p> 标签中
+  return paragraphs.map(p => `<p>${p}</p>`).join('');
+}
+
+/**
+ * 确保内容是有效的 HTML
+ * 如果内容看起来是纯文本（没有 HTML 标签），则转换为 HTML
+ */
+function ensureHtml(content: string): string {
+  if (!content) return '';
+
+  // 检查是否已经是 HTML
+  if (content.includes('<') && content.includes('>')) {
+    return content;
+  }
+
+  // 看起来是纯文本，转换它
+  return textToHtml(content);
+}
+
 export function RichTextEditor({ content, onChange, onSave, onAIContinue }: RichTextEditorProps) {
   const editor = useEditor({
     extensions: [
@@ -31,7 +61,7 @@ export function RichTextEditor({ content, onChange, onSave, onAIContinue }: Rich
         limit: 100000,
       }),
     ],
-    content,
+    content: ensureHtml(content),
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
     },
@@ -43,8 +73,10 @@ export function RichTextEditor({ content, onChange, onSave, onAIContinue }: Rich
     if (editor && content !== editor.getHTML()) {
       // 保存当前光标位置
       const { from } = editor.state.selection;
+      // 确保内容是有效的 HTML
+      const htmlContent = ensureHtml(content);
       // 设置内容并尝试保持选区
-      editor.commands.setContent(content);
+      editor.commands.setContent(htmlContent);
       // 恢复光标位置（如果可能）
       editor.commands.setTextSelection(Math.min(from, editor.state.doc.content.size));
     }
