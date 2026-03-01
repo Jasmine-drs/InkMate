@@ -1,7 +1,7 @@
 """
 导出历史模型
 """
-from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Index, Enum
+from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Index, CHAR, text
 from sqlalchemy.sql import func
 from db.session import Base
 import uuid
@@ -19,9 +19,9 @@ class ExportHistory(Base):
     """导出历史记录表"""
     __tablename__ = "export_history"
 
-    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    project_id = Column(String(36), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True)
+    id = Column(CHAR(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(CHAR(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    project_id = Column(CHAR(36), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True)
     format = Column(String(20), nullable=False)  # txt, epub, docx
     file_name = Column(String(255), nullable=False)
     file_size = Column(Integer, default=0)  # 文件大小（字节）
@@ -32,6 +32,7 @@ class ExportHistory(Base):
     __table_args__ = (
         Index('idx_user_project', 'user_id', 'project_id'),
         Index('idx_created_at', 'created_at'),
+        {'mysql_charset': 'utf8mb4', 'mysql_collate': 'utf8mb4_unicode_ci'},
     )
 
     def __repr__(self):

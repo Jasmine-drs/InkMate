@@ -232,7 +232,9 @@ async def continue_writing_stream(
                 yield f"data: {json.dumps({'token': escaped_token})}\n\n"
         except Exception as e:
             logger.error(f"AI 续写流式失败：{e}")
-            yield f"data: {json.dumps({'error': 'AI 续写失败'})}\n\n"
+            # 发送详细错误信息
+            error_msg = str(e)
+            yield f"data: {json.dumps({'error': error_msg})}\n\n"
         yield "data: [DONE]\n\n"
 
     return StreamingResponse(
