@@ -104,7 +104,9 @@ export function useAutoSave(options: UseAutoSaveOptions): AutoSaveResult {
    * 保存到本地缓存
    */
   const saveToLocal = useCallback(() => {
-    if (!chapterId) return;
+    // 支持 chapterId 或 actualChapterId（用于新建章节）
+    const idToUse = chapterId;
+    if (!idToUse) return;
 
     const draftData: DraftData = {
       title: titleRef.current,
@@ -114,7 +116,7 @@ export function useAutoSave(options: UseAutoSaveOptions): AutoSaveResult {
     };
 
     try {
-      localStorage.setItem(getStorageKey(chapterId), JSON.stringify(draftData));
+      localStorage.setItem(getStorageKey(idToUse), JSON.stringify(draftData));
       return true;
     } catch (error) {
       // 本地保存失败时静默处理，返回 false

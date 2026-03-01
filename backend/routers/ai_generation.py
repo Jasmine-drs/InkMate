@@ -28,9 +28,16 @@ async def check_rate_limit(user_id: str) -> bool:
     try:
         import redis
 
-        # 创建同步 Redis 连接用于速率限制
-        # 尝试不同的密码配置
+        # 构建 Redis URL，如果有密码则添加到 URL 中
         redis_url = settings.REDIS_URL
+        if settings.REDIS_PASSWORD:
+            # redis://[:password]@host:port
+            redis_url = redis_url.replace(
+                "redis://",
+                f"redis://:{settings.REDIS_PASSWORD}@"
+            )
+
+        # 创建同步 Redis 连接用于速率限制
         r = redis.from_url(
             redis_url,
             encoding="utf-8",

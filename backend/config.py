@@ -16,6 +16,7 @@ class Settings(BaseSettings):
 
     # Redis 配置
     REDIS_URL: str = "redis://localhost:6379"
+    REDIS_PASSWORD: Optional[str] = None
 
     # Milvus 向量数据库配置
     MILVUS_HOST: str = "localhost"

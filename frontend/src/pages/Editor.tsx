@@ -24,7 +24,7 @@ import {
 } from '@ant-design/icons';
 import { RichTextEditor } from '@/components/RichTextEditor';
 import { useAutoSave } from '@/hooks/useAutoSave';
-import { getChapter, updateChapter, getChapterById } from '@/services/chapter';
+import { getChapter, updateChapter, getChapterById, createChapter, type CreateChapterParams } from '@/services/chapter';
 import { VersionHistoryModal } from '@/components/VersionHistoryModal';
 import { continueWritingStream } from '@/services/ai';
 import './Editor.css';
@@ -45,6 +45,8 @@ export default function Editor() {
   const [isAIGenerating, setIsAIGenerating] = useState(false);
 
   // 自动保存 Hook
+  const [createdChapterId, setCreatedChapterId] = useState<string | undefined>(undefined);
+
   const {
     isSaving,
     lastSaveTime,
@@ -54,15 +56,35 @@ export default function Editor() {
     clearLocalDraft,
     saveStatus,
   } = useAutoSave({
-    chapterId: chapterId && chapterId !== 'new' ? chapterId : undefined,
+    chapterId: chapterId && chapterId !== 'new' ? chapterId : createdChapterId,
     projectId: projectId,
     saveInterval: 30000, // 30 秒自动保存
     content,
     title,
     onSaveToServer: useCallback(async ({ title, content }: { title: string; content: string }) => {
-      if (!projectId || !chapterId) return;
-      await updateChapter(projectId, chapterId, { title, content }, true);
-    }, [projectId, chapterId]),
+      if (!projectId) return;
+
+      // 如果是新建章节，使用创建接口
+      if (!chapterId || chapterId === 'new') {
+        if (!createdChapterId) {
+          // 首次创建，提取章节号（从标题或默认 1）
+          const chapterNum = 1; // TODO: 获取下一个可用章节号
+          const result = await createChapter(projectId, {
+            chapter_number: chapterNum,
+            title,
+            content: content || '',
+          });
+          if (result && result.id) {
+            setCreatedChapterId(result.id);
+            // 更新 URL 为新章节 ID
+            navigate(`/editor/${projectId}/${result.id}`, { replace: true });
+          }
+        }
+      } else {
+        // 更新现有章节
+        await updateChapter(projectId, chapterId, { title, content }, true);
+      }
+    }, [projectId, chapterId, createdChapterId, navigate]),
   });
 
   // 加载章节数据
