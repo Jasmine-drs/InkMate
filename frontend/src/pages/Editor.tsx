@@ -94,9 +94,9 @@ export default function Editor() {
           setContent(chapter.content || '');
           setIsNewChapter(false);
         }
-      } catch (error: any) {
-        console.error('加载章节失败:', error);
-        message.error('加载章节失败，' + (error.message || '请检查网络连接'));
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : '加载章节失败';
+        message.error('加载章节失败，' + errorMessage);
       } finally {
         setLoading(false);
       }
@@ -162,10 +162,10 @@ export default function Editor() {
       });
       message.destroy();
       message.success('AI 续写完成');
-    } catch (error: any) {
-      console.error('AI 续写失败:', error);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'AI 续写失败';
       message.destroy();
-      message.error('AI 续写失败：' + (error.message || '请稍后重试'));
+      message.error('AI 续写失败：' + errorMessage);
     } finally {
       setIsAIGenerating(false);
     }
@@ -184,9 +184,9 @@ export default function Editor() {
           content: versionContent
         }, true);
         message.success(`已恢复到版本 ${versionNum} 并保存为新版本`);
-      } catch (error: any) {
-        console.error('恢复版本失败:', error);
-        message.error('恢复版本失败');
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : '恢复版本失败';
+        message.error('恢复版本失败：' + errorMessage);
       }
     }
   };

@@ -78,9 +78,9 @@ export function VersionHistoryModal({
         content: item.content || '',
         created_at: item.created_at || new Date().toISOString(),
       })));
-    } catch (error: any) {
-      console.error('加载版本历史失败:', error);
-      message.error('加载版本历史失败');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : '加载版本历史失败';
+      message.error('加载版本历史失败：' + errorMessage);
     } finally {
       setLoading(false);
     }

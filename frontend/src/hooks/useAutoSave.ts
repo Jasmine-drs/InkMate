@@ -117,7 +117,7 @@ export function useAutoSave(options: UseAutoSaveOptions): AutoSaveResult {
       localStorage.setItem(getStorageKey(chapterId), JSON.stringify(draftData));
       return true;
     } catch (error) {
-      console.error('本地保存失败:', error);
+      // 本地保存失败时静默处理，返回 false
       return false;
     }
   }, [chapterId, projectId]);
@@ -144,7 +144,6 @@ export function useAutoSave(options: UseAutoSaveOptions): AutoSaveResult {
       message.success('保存成功');
     } catch (error) {
       setSaveStatus('error');
-      console.error('服务器保存失败:', error);
       message.error('保存失败，已转为本地缓存');
       // 保存失败时回退到本地缓存
       saveToLocal();
@@ -189,7 +188,6 @@ export function useAutoSave(options: UseAutoSaveOptions): AutoSaveResult {
         message.success('已恢复本地草稿');
       }
     } catch (error) {
-      console.error('恢复草稿失败:', error);
       message.error('恢复草稿失败');
     }
   }, [chapterId]);
@@ -257,8 +255,7 @@ export function useAutoSave(options: UseAutoSaveOptions): AutoSaveResult {
   // 监听恢复事件
   useEffect(() => {
     const handleRestore = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      console.log('收到恢复事件:', customEvent.detail);
+      // 静默处理恢复事件，无需日志输出
     };
 
     window.addEventListener('restore-draft', handleRestore);
