@@ -60,7 +60,7 @@ function debounce<T extends (...args: any[]) => any>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout | null = null;
+  let timeout: ReturnType<typeof setTimeout> | null = null;
   return (...args: Parameters<T>) => {
     if (timeout) {
       clearTimeout(timeout);
@@ -254,7 +254,7 @@ export function useAutoSave(options: UseAutoSaveOptions): AutoSaveResult {
 
   // 监听恢复事件
   useEffect(() => {
-    const handleRestore = (event: Event) => {
+    const handleRestore = (_event: Event) => {
       // 静默处理恢复事件，无需日志输出
     };
 
