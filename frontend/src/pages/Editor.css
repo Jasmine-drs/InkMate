@@ -375,35 +375,41 @@
    Popconfirm 弹窗样式 - 深色主题
    ======================================== */
 .editor-layout .ant-popover {
-  --antd-popover-bg: var(--bg-secondary) !important;
+  --antd-popover-bg: #142136 !important;
   --antd-popover-border-color: var(--border-primary) !important;
-  --antd-popover-color: var(--text-primary) !important;
+  --antd-popover-color: #FFFFFF !important;
 }
 
 .editor-layout .ant-popover .ant-popover-inner {
-  background: var(--bg-secondary) !important;
+  background: #142136 !important;
   border: 1px solid var(--border-primary) !important;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5) !important;
 }
 
 .editor-layout .ant-popover .ant-popover-title {
-  color: var(--text-primary) !important;
+  color: #FFFFFF !important;
   border-bottom-color: var(--border-primary) !important;
-  background: var(--bg-secondary) !important;
+  background: #142136 !important;
 }
 
 .editor-layout .ant-popover .ant-popover-inner-content {
-  color: var(--text-primary) !important;
-  background: var(--bg-secondary) !important;
+  color: #FFFFFF !important;
+  background: #142136 !important;
 }
 
 .editor-layout .ant-popover .ant-popover-message {
-  color: var(--text-primary) !important;
-  background: var(--bg-secondary) !important;
+  color: #FFFFFF !important;
+  background: #142136 !important;
 }
 
 .editor-layout .ant-popover .ant-popover-description {
-  color: var(--text-primary) !important;
+  color: #FFFFFF !important;
+}
+
+/* 覆盖 Popconfirm 内的 Typography 样式 */
+.editor-layout .ant-popover .ant-typography,
+.editor-layout .ant-popover .ant-typography * {
+  color: #FFFFFF !important;
 }
 
 .editor-layout .ant-popover .ant-btn-primary {
@@ -415,17 +421,17 @@
 .editor-layout .ant-popover .ant-btn-default {
   background: rgba(20, 33, 54, 0.6) !important;
   border-color: var(--border-secondary) !important;
-  color: var(--text-primary) !important;
+  color: #FFFFFF !important;
 }
 
 .editor-layout .ant-popover .ant-btn-default:hover {
   border-color: var(--orange-600) !important;
-  color: var(--text-primary) !important;
+  color: #FFFFFF !important;
   background: rgba(20, 33, 54, 0.8) !important;
 }
 
 .editor-layout .ant-popover .ant-popover-arrow {
-  background: var(--bg-secondary) !important;
+  background: #142136 !important;
   border-left: 1px solid var(--border-primary) !important;
   border-top: 1px solid var(--border-primary) !important;
 }

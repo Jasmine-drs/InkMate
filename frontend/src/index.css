@@ -490,37 +490,43 @@ body {
 .ant-popover {
   --antd-popover-bg: var(--bg-secondary) !important;
   --antd-popover-border-color: var(--border-primary) !important;
-  --antd-popover-color: var(--text-primary) !important;
+  --antd-popover-color: #FFFFFF !important;
 }
 
 .ant-popover .ant-popover-inner {
-  background: var(--bg-secondary) !important;
+  background: #142136 !important;
   border: 1px solid var(--border-primary) !important;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5) !important;
 }
 
 .ant-popover .ant-popover-title {
-  color: var(--text-primary) !important;
+  color: #FFFFFF !important;
   border-bottom-color: var(--border-primary) !important;
-  background: var(--bg-secondary) !important;
+  background: #142136 !important;
 }
 
 .ant-popover .ant-popover-inner-content {
-  color: var(--text-primary) !important;
-  background: var(--bg-secondary) !important;
+  color: #FFFFFF !important;
+  background: #142136 !important;
 }
 
 .ant-popover .ant-popover-message {
-  color: var(--text-primary) !important;
-  background: var(--bg-secondary) !important;
+  color: #FFFFFF !important;
+  background: #142136 !important;
 }
 
 .ant-popover .ant-popover-description {
-  color: var(--text-primary) !important;
+  color: #FFFFFF !important;
+}
+
+/* 覆盖 Popconfirm 内的 Typography 样式 */
+.ant-popover .ant-typography,
+.ant-popover .ant-typography * {
+  color: #FFFFFF !important;
 }
 
 .ant-popover .ant-popover-arrow {
-  background: var(--bg-secondary) !important;
+  background: #142136 !important;
   border-left: 1px solid var(--border-primary) !important;
   border-top: 1px solid var(--border-primary) !important;
 }
@@ -534,12 +540,12 @@ body {
 .ant-popover .ant-btn-default {
   background: rgba(20, 33, 54, 0.6) !important;
   border-color: var(--border-secondary) !important;
-  color: var(--text-primary) !important;
+  color: #FFFFFF !important;
 }
 
 .ant-popover .ant-btn-default:hover {
   border-color: var(--orange-600) !important;
-  color: var(--text-primary) !important;
+  color: #FFFFFF !important;
   background: rgba(20, 33, 54, 0.8) !important;
 }
 
