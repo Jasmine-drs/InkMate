@@ -8,6 +8,8 @@ import Dashboard from '@/pages/Dashboard';
 import ProjectDetail from '@/pages/ProjectDetail';
 import Editor from '@/pages/Editor';
 import SettingsEditor from '@/pages/SettingsEditor';
+import CharacterList from '@/pages/CharacterList';
+import CharacterEditor from '@/pages/CharacterEditor';
 
 export const router = createBrowserRouter([
   {
@@ -33,6 +35,14 @@ export const router = createBrowserRouter([
       {
         path: 'settings/:projectId',
         element: <SettingsEditor />,
+      },
+      {
+        path: 'project/:id/characters',
+        element: <CharacterList />,
+      },
+      {
+        path: 'project/:id/character/:characterId',
+        element: <CharacterEditor />,
       },
     ],
   },

@@ -169,9 +169,9 @@ export default function ProjectDetail() {
                       <Button
                         type="primary"
                         className="create-character-btn"
-                        onClick={() => navigate(`/editor/${id}/new`)}
+                        onClick={() => navigate(`/project/${id}/characters`)}
                       >
-                        <UserOutlined /> 创建角色
+                        <UserOutlined /> 管理角色
                       </Button>
                     </div>
                   </div>
