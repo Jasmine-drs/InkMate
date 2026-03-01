@@ -195,7 +195,7 @@ export default function ProjectDetail() {
                       <Button
                         type="primary"
                         className="create-setting-btn"
-                        onClick={() => navigate(`/editor/${id}/new`)}
+                        onClick={() => navigate(`/settings/${id}`)}
                       >
                         <SettingOutlined /> 添加设定
                       </Button>

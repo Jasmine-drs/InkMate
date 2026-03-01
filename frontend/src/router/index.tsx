@@ -7,6 +7,7 @@ import Login from '@/pages/Login';
 import Dashboard from '@/pages/Dashboard';
 import ProjectDetail from '@/pages/ProjectDetail';
 import Editor from '@/pages/Editor';
+import SettingsEditor from '@/pages/SettingsEditor';
 
 export const router = createBrowserRouter([
   {
@@ -28,6 +29,10 @@ export const router = createBrowserRouter([
       {
         path: 'editor/:projectId/:chapterId',
         element: <Editor />,
+      },
+      {
+        path: 'settings/:projectId',
+        element: <SettingsEditor />,
       },
     ],
   },
