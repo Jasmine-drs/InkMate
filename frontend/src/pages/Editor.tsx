@@ -452,9 +452,9 @@ export default function Editor() {
                 <Text className="tip-text">自动保存每 30 秒一次（Ctrl+S 手动保存）</Text>
               </li>
               {hasLocalDraft && (
-                <li className="tip-item" style={{ color: '#faad14' }}>
+                <li className="tip-item" style={{ color: 'var(--warning)' }}>
                   <div className="tip-dot" />
-                  <Text className="tip-text" style={{ color: '#faad14' }}>检测到本地草稿，可恢复</Text>
+                  <Text className="tip-text" style={{ color: 'var(--warning)' }}>检测到本地草稿，可恢复</Text>
                 </li>
               )}
             </ul>

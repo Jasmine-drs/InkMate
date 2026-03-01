@@ -38,7 +38,7 @@
 .back-btn {
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-secondary);
-  background: rgba(20, 33, 54, 0.6);
+  background: var(--bg-glass);
   color: var(--text-secondary);
   transition: all var(--transition-base);
   height: 36px;
@@ -86,7 +86,7 @@
   align-items: center;
   gap: 6px;
   padding: 6px 10px;
-  background: rgba(20, 33, 54, 0.4);
+  background: var(--bg-glass);
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-primary);
 }
@@ -113,13 +113,13 @@
   font-size: 12px !important;
   background: rgba(26, 188, 156, 0.1) !important;
   border-color: rgba(26, 188, 156, 0.2) !important;
-  color: #1ABC9C !important;
+  color: var(--success) !important;
 }
 
 .save-status.saving {
   background: rgba(52, 152, 219, 0.1) !important;
   border-color: rgba(52, 152, 219, 0.2) !important;
-  color: #3498DB !important;
+  color: var(--info) !important;
 }
 
 /* AI 续写按钮 - 带呼吸效果 */
@@ -306,7 +306,7 @@
 
 /* 提示卡片 */
 .tip-card {
-  background: rgba(20, 33, 54, 0.4);
+  background: var(--bg-glass);
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-lg);
   padding: 16px;
@@ -373,7 +373,7 @@
   height: 44px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-secondary);
-  background: rgba(20, 33, 54, 0.6);
+  background: var(--bg-glass);
   color: var(--text-secondary);
   font-size: 14px;
   font-weight: 500;
@@ -393,28 +393,28 @@
    使用 overlayClassName="dark-popconfirm" 针对性覆盖
    ======================================== */
 .dark-popconfirm .ant-popover-inner {
-  background: #142136 !important;
+  background: var(--bg-secondary) !important;
   border: 1px solid rgba(255, 255, 255, 0.15) !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important;
 }
 
 .dark-popconfirm .ant-popover-title {
-  color: #FFFFFF !important;
+  color: var(--text-primary) !important;
   border-bottom-color: rgba(255, 255, 255, 0.15) !important;
-  background: #142136 !important;
+  background: var(--bg-secondary) !important;
   font-weight: 600 !important;
 }
 
 .dark-popconfirm .ant-popover-inner-content {
-  color: #FFFFFF !important;
-  background: #142136 !important;
+  color: var(--text-primary) !important;
+  background: var(--bg-secondary) !important;
   font-size: 14px !important;
   line-height: 1.6 !important;
 }
 
 .dark-popconfirm .ant-popover-message {
-  color: #FFFFFF !important;
-  background: #142136 !important;
+  color: var(--text-primary) !important;
+  background: var(--bg-secondary) !important;
 }
 
 .dark-popconfirm .ant-popover-description {
@@ -424,32 +424,32 @@
 /* 覆盖所有 Typography 样式 */
 .dark-popconfirm .ant-typography,
 .dark-popconfirm .ant-typography * {
-  color: #FFFFFF !important;
+  color: var(--text-primary) !important;
 }
 
 /* 按钮样式 */
 .dark-popconfirm .ant-btn-primary {
-  background: linear-gradient(135deg, #E67E22 0%, #FF9F43 100%) !important;
+  background: linear-gradient(135deg, var(--orange-600) 0%, var(--orange-500) 100%) !important;
   border: none !important;
-  color: #FFFFFF !important;
+  color: var(--text-primary) !important;
   font-weight: 600 !important;
 }
 
 .dark-popconfirm .ant-btn-default {
   background: rgba(255, 255, 255, 0.1) !important;
   border-color: rgba(255, 255, 255, 0.3) !important;
-  color: #FFFFFF !important;
+  color: var(--text-primary) !important;
 }
 
 .dark-popconfirm .ant-btn-default:hover {
-  border-color: #E67E22 !important;
-  color: #FFFFFF !important;
+  border-color: var(--orange-600) !important;
+  color: var(--text-primary) !important;
   background: rgba(230, 126, 34, 0.2) !important;
 }
 
 /* 箭头样式 */
 .dark-popconfirm .ant-popover-arrow {
-  background: #142136 !important;
+  background: var(--bg-secondary) !important;
   border-left: 1px solid rgba(255, 255, 255, 0.15) !important;
   border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
 }
@@ -521,7 +521,7 @@
 
 .editor-toolbar {
   padding: 12px 16px;
-  background: rgba(20, 33, 54, 0.6);
+  background: var(--bg-glass);
   border-bottom: 1px solid var(--border-primary);
   position: sticky;
   top: 0;
@@ -531,7 +531,7 @@
 }
 
 .editor-toolbar .ant-btn {
-  background: rgba(20, 33, 54, 0.6);
+  background: var(--bg-glass);
   border-color: var(--border-secondary);
   color: var(--text-secondary);
   transition: all var(--transition-fast);
@@ -546,7 +546,7 @@
 .editor-toolbar .ant-btn-primary {
   background: linear-gradient(135deg, var(--orange-600) 0%, var(--orange-500) 100%);
   border: none;
-  color: white;
+  color: var(--text-primary);
 }
 
 .editor-toolbar .ant-btn-primary:hover {
@@ -625,7 +625,7 @@
 }
 
 .editor-content .ProseMirror pre {
-  background: rgba(20, 33, 54, 0.6);
+  background: var(--bg-glass);
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-sm);
   padding: 1em;
@@ -634,7 +634,7 @@
 }
 
 .editor-content .ProseMirror code {
-  background: rgba(20, 33, 54, 0.6);
+  background: var(--bg-glass);
   padding: 0.2em 0.4em;
   border-radius: 4px;
   font-family: var(--font-mono);
