@@ -481,9 +481,65 @@ body {
   color: var(--text-tertiary) !important;
 }
 
-/* 全局 Message 样式 */
-.ant-message {
-  color: var(--text-primary);
+/* 全局 Message 样式 - 深色主题 */
+.ant-message .ant-message-notice-content {
+  background: #142136 !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6) !important;
+  color: #FFFFFF !important;
+  border-radius: 8px !important;
+}
+
+.ant-message .ant-message-notice-content * {
+  color: #FFFFFF !important;
+}
+
+.ant-message .ant-message-icon {
+  color: #FFFFFF !important;
+}
+
+.ant-message .ant-message-success .ant-message-icon {
+  color: #1ABC9C !important;
+}
+
+.ant-message .ant-message-error .ant-message-icon {
+  color: #E74C3C !important;
+}
+
+.ant-message .ant-message-warning .ant-message-icon {
+  color: #F39C12 !important;
+}
+
+.ant-message .ant-message-loading .ant-message-icon {
+  color: #3498DB !important;
+}
+
+/* 全局 Notification 样式 - 深色主题 */
+.ant-notification .ant-notification-notice {
+  background: #142136 !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6) !important;
+  border-radius: 8px !important;
+}
+
+.ant-notification .ant-notification-notice-message {
+  color: #FFFFFF !important;
+}
+
+.ant-notification .ant-notification-notice-description {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.ant-notification .ant-notification-notice-icon {
+  color: #FFFFFF !important;
+}
+
+.ant-notification .ant-notification-notice-close {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.ant-notification .ant-notification-notice-close:hover {
+  color: #FFFFFF !important;
 }
 
 /* 全局 Popover/Popconfirm 样式 - 深色主题 */
