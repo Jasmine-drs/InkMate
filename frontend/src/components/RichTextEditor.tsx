@@ -5,6 +5,7 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import CharacterCount from '@tiptap/extension-character-count';
+import { useEffect } from 'react';
 import { Toolbar } from './Toolbar';
 import '../pages/Editor.css';
 
@@ -35,6 +36,13 @@ export function RichTextEditor({ content, onChange, onSave, onAIContinue }: Rich
       onChange(editor.getHTML());
     },
   });
+
+  // 监听 content 变化，同步更新编辑器内容（用于从版本历史恢复）
+  useEffect(() => {
+    if (editor && content !== editor.getHTML()) {
+      editor.commands.setContent(content);
+    }
+  }, [content, editor]);
 
   if (!editor) {
     return null;
