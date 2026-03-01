@@ -128,8 +128,12 @@ export function useAutoSave(options: UseAutoSaveOptions): AutoSaveResult {
    * 保存到服务器
    */
   const saveToServer = useCallback(async () => {
-    if (!onSaveToServer || !chapterId) return;
+    if (!onSaveToServer) {
+      console.warn('saveToServer: onSaveToServer callback is not provided');
+      return;
+    }
 
+    // 注意：不强制要求 chapterId，因为 onSaveToServer 内部可能处理新建章节逻辑
     try {
       setSaveStatus('saving');
       setIsSaving(true);
@@ -146,13 +150,15 @@ export function useAutoSave(options: UseAutoSaveOptions): AutoSaveResult {
       message.success('保存成功');
     } catch (error) {
       setSaveStatus('error');
-      message.error('保存失败，已转为本地缓存');
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      console.error('saveToServer error:', errorMsg);
+      message.error(`保存失败：${errorMsg}`);
       // 保存失败时回退到本地缓存
       saveToLocal();
     } finally {
       setIsSaving(false);
     }
-  }, [chapterId, onSaveToServer, saveToLocal]);
+  }, [onSaveToServer, saveToLocal]);
 
   /**
    * 立即保存（先本地，后服务器）

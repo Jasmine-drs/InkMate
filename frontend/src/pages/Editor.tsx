@@ -64,7 +64,9 @@ export default function Editor() {
     content,
     title,
     onSaveToServer: useCallback(async ({ title, content }: { title: string; content: string }) => {
-      if (!projectId) return;
+      if (!projectId) {
+        throw new Error('项目 ID 不存在');
+      }
 
       // 如果是新建章节，使用创建接口
       if (!chapterId || chapterId === 'new') {
@@ -80,7 +82,11 @@ export default function Editor() {
             setCreatedChapterId(result.id);
             // 更新 URL 为新章节 ID
             navigate(`/editor/${projectId}/${result.id}`, { replace: true });
+            return; // 新建成功直接返回，后续逻辑由 Hook 处理
           }
+        } else {
+          // 已经有 ID 了，更新章节
+          await updateChapter(projectId, createdChapterId, { title, content }, true);
         }
       } else {
         // 更新现有章节

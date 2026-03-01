@@ -1,0 +1,63 @@
+diff --git a/frontend/src/hooks/useAutoSave.ts b/frontend/src/hooks/useAutoSave.ts
+index 2dc1206..f74e3d4 100644
+--- a/frontend/src/hooks/useAutoSave.ts
++++ b/frontend/src/hooks/useAutoSave.ts
+@@ -128,8 +128,12 @@ export function useAutoSave(options: UseAutoSaveOptions): AutoSaveResult {
+    * 保存到服务器
+    */
+   const saveToServer = useCallback(async () => {
+-    if (!onSaveToServer || !chapterId) return;
++    if (!onSaveToServer) {
++      console.warn('saveToServer: onSaveToServer callback is not provided');
++      return;
++    }
+ 
++    // 注意：不强制要求 chapterId，因为 onSaveToServer 内部可能处理新建章节逻辑
+     try {
+       setSaveStatus('saving');
+       setIsSaving(true);
+@@ -146,13 +150,15 @@ export function useAutoSave(options: UseAutoSaveOptions): AutoSaveResult {
+       message.success('保存成功');
+     } catch (error) {
+       setSaveStatus('error');
+-      message.error('保存失败，已转为本地缓存');
++      const errorMsg = error instanceof Error ? error.message : String(error);
++      console.error('saveToServer error:', errorMsg);
++      message.error(`保存失败：${errorMsg}`);
+       // 保存失败时回退到本地缓存
+       saveToLocal();
+     } finally {
+       setIsSaving(false);
+     }
+-  }, [chapterId, onSaveToServer, saveToLocal]);
++  }, [onSaveToServer, saveToLocal]);
+ 
+   /**
+    * 立即保存（先本地，后服务器）
+diff --git a/frontend/src/pages/Editor.tsx b/frontend/src/pages/Editor.tsx
+index 1afbfb3..c85a3d8 100644
+--- a/frontend/src/pages/Editor.tsx
++++ b/frontend/src/pages/Editor.tsx
+@@ -64,7 +64,9 @@ export default function Editor() {
+     content,
+     title,
+     onSaveToServer: useCallback(async ({ title, content }: { title: string; content: string }) => {
+-      if (!projectId) return;
++      if (!projectId) {
++        throw new Error('项目 ID 不存在');
++      }
+ 
+       // 如果是新建章节，使用创建接口
+       if (!chapterId || chapterId === 'new') {
+@@ -80,7 +82,11 @@ export default function Editor() {
+             setCreatedChapterId(result.id);
+             // 更新 URL 为新章节 ID
+             navigate(`/editor/${projectId}/${result.id}`, { replace: true });
++            return; // 新建成功直接返回，后续逻辑由 Hook 处理
+           }
++        } else {
++          // 已经有 ID 了，更新章节
++          await updateChapter(projectId, createdChapterId, { title, content }, true);
+         }
+       } else {
+         // 更新现有章节
