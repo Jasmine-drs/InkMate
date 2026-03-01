@@ -1,0 +1,22 @@
+# 统一换行符配置
+# 所有文本文件使用 LF 换行符（Unix 风格）
+* text=auto eol=lf
+
+# 明确指定脚本文件的换行符
+*.sh text eol=lf
+*.py text eol=lf
+*.js text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.css text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# SQL 文件
+*.sql text eol=lf
+
+# 批处理文件使用 CRLF（Windows）
+*.bat text eol=crlf
+*.cmd text eol=crlf

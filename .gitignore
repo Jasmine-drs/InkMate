@@ -1,0 +1,129 @@
+# ============================================================
+# AI 单元剧小说创作助手 - Git Ignore 配置
+# ============================================================
+
+# ============================================================
+# 通用忽略规则
+# ============================================================
+# 操作系统文件
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# 编辑器文件
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# 日志文件
+*.log
+logs/
+
+# 临时文件
+*.tmp
+*.bak
+*.cache
+
+# ============================================================
+# 前端忽略规则 (frontend/)
+# ============================================================
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.env.local
+frontend/.env.*.local
+frontend/package-lock.json
+frontend/yarn.lock
+frontend/pnpm-lock.yaml
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# 构建产物
+frontend/vite.config.ts.timestamp-*
+
+# ============================================================
+# 后端忽略规则 (backend/)
+# ============================================================
+# Python 虚拟环境
+backend/venv/
+backend/.venv/
+backend/env/
+backend/.env/
+
+# Python 缓存
+backend/__pycache__/
+backend/*.py[cod]
+backend/*$py.class
+backend/*.so
+backend/.Python
+
+# Pip 缓存
+backend/.cache/pip/
+
+# 环境变量文件（敏感信息）
+backend/.env
+backend/.env.local
+backend/.env.prod
+
+# 数据库文件（开发时的 SQLite 等）
+backend/*.db
+backend/*.sqlite3
+
+# 测试覆盖报告
+backend/htmlcov/
+backend/.coverage
+backend/coverage.xml
+
+# pytest
+backend/.pytest_cache/
+backend/*.egg-info/
+
+# ============================================================
+# 数据卷忽略规则 (volumes/)
+# ============================================================
+# Milvus 数据
+volumes/milvus/*
+!volumes/milvus/.gitkeep
+
+# etcd 数据
+volumes/etcd/*
+!volumes/etcd/.gitkeep
+
+# MinIO 数据
+volumes/minio/*
+!volumes/minio/.gitkeep
+
+# MySQL 数据
+volumes/mysql/*
+!volumes/mysql/.gitkeep
+
+# Redis 数据
+volumes/redis/*
+!volumes/redis/.gitkeep
+
+# ============================================================
+# 其他忽略规则
+# ============================================================
+# Claude 配置
+CLAUDE.md
+
+# 项目计划文档（如果不需要版本控制）
+# PROJECT_PLAN.md
+
+# 脚本目录的临时文件
+scripts/*.sql~
+scripts/*.py~
+
+# 前端卷目录（如果有）
+volumes/frontend/*
