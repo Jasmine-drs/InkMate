@@ -5,6 +5,12 @@
 # ============================================================
 # 通用忽略规则
 # ============================================================
+# Python 缓存
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
 # 操作系统文件
 .DS_Store
 .DS_Store?
@@ -63,6 +69,7 @@ backend/.env/
 
 # Python 缓存
 backend/__pycache__/
+backend/**/__pycache__/
 backend/*.py[cod]
 backend/*$py.class
 backend/*.so
