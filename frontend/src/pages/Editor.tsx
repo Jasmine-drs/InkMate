@@ -12,7 +12,7 @@ import {
   Divider,
   Tag,
   Popconfirm,
-  message,
+  App,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -33,6 +33,7 @@ const { Header, Content, Sider } = Layout;
 const { Title, Text } = Typography;
 
 export default function Editor() {
+  const { message } = App.useApp();
   const { projectId, chapterId } = useParams<{ projectId: string; chapterId: string }>();
   const navigate = useNavigate();
 
