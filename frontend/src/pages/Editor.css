@@ -372,6 +372,56 @@
 }
 
 /* ========================================
+   Popconfirm 弹窗样式 - 深色主题
+   ======================================== */
+.editor-layout .ant-popover {
+  --antd-popover-bg: var(--bg-secondary);
+  --antd-popover-border-color: var(--border-primary);
+  --antd-popover-color: var(--text-primary);
+}
+
+.editor-layout .ant-popover .ant-popover-inner {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+}
+
+.editor-layout .ant-popover .ant-popover-title {
+  color: var(--text-primary);
+  border-bottom-color: var(--border-primary);
+}
+
+.editor-layout .ant-popover .ant-popover-inner-content {
+  color: var(--text-primary);
+}
+
+.editor-layout .ant-popover .ant-popover-message {
+  color: var(--text-primary);
+}
+
+.editor-layout .ant-popover .ant-btn-primary {
+  background: linear-gradient(135deg, var(--orange-600) 0%, var(--orange-500) 100%);
+  border: none;
+  color: white;
+}
+
+.editor-layout .ant-popover .ant-btn-default {
+  background: rgba(20, 33, 54, 0.6);
+  border-color: var(--border-secondary);
+  color: var(--text-secondary);
+}
+
+.editor-layout .ant-popover .ant-btn-default:hover {
+  border-color: var(--orange-600);
+  color: var(--text-primary);
+}
+
+.editor-layout .ant-popover .ant-popover-arrow {
+  background: var(--bg-secondary);
+  border-left: 1px solid var(--border-primary);
+  border-top: 1px solid var(--border-primary);
+}
+
+/* ========================================
    响应式
    ======================================== */
 @media (max-width: 1024px) {
