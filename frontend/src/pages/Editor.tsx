@@ -147,6 +147,34 @@ export default function Editor() {
     setWordCount(tempDiv.textContent?.length || 0);
   }, [content]);
 
+  const handleAIContinue = async () => {
+    if (!content) {
+      message.warning('请先输入一些内容再续写');
+      return;
+    }
+    if (isAIGenerating) {
+      message.warning('AI 正在生成中，请稍候...');
+      return;
+    }
+
+    setIsAIGenerating(true);
+    const hide = message.loading('AI 正在创作...', 0);
+
+    try {
+      await continueWritingStream(content, (token) => {
+        setContent((prev) => prev + token);
+      });
+      hide();
+      message.success('AI 续写完成');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'AI 续写失败';
+      hide();
+      message.error('AI 续写失败：' + errorMessage);
+    } finally {
+      setIsAIGenerating(false);
+    }
+  };
+
   // 快捷键监听
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -164,35 +192,7 @@ export default function Editor() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleSaveNow]);
-
-  const handleAIContinue = async () => {
-    if (!content) {
-      message.warning('请先输入一些内容再续写');
-      return;
-    }
-    if (isAIGenerating) {
-      message.info('AI 正在生成中，请稍候...');
-      return;
-    }
-
-    setIsAIGenerating(true);
-    message.loading({ content: 'AI 正在创作...', key: 'ai-generate', duration: 0 });
-
-    try {
-      await continueWritingStream(content, (token) => {
-        setContent((prev) => prev + token);
-      });
-      message.destroy('ai-generate');
-      message.success('AI 续写完成');
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'AI 续写失败';
-      message.destroy('ai-generate');
-      message.error('AI 续写失败：' + errorMessage);
-    } finally {
-      setIsAIGenerating(false);
-    }
-  };
+  }, [handleSaveNow, handleAIContinue]);
 
   // 处理版本恢复
   const handleRestoreVersion = async (versionNum: number, versionContent: string) => {
@@ -218,7 +218,10 @@ export default function Editor() {
   const handleViewOutline = () => {
     if (projectId) {
       // TODO: 导航到大纲页面或打开大纲弹窗
-      message.info('大纲功能开发中...');
+      message.open({
+        type: 'info',
+        content: '大纲功能开发中...',
+      });
     }
   };
 
@@ -226,7 +229,10 @@ export default function Editor() {
   const handleViewCharacters = () => {
     if (projectId) {
       // TODO: 导航到角色页面或打开角色弹窗
-      message.info('角色功能开发中...');
+      message.open({
+        type: 'info',
+        content: '角色功能开发中...',
+      });
     }
   };
 

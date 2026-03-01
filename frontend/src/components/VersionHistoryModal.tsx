@@ -10,8 +10,8 @@ import {
   Tag,
   Typography,
   Empty,
-  message,
   Spin,
+  App,
 } from 'antd';
 import {
   HistoryOutlined,
@@ -55,6 +55,7 @@ export function VersionHistoryModal({
   onClose,
   onRestore,
 }: VersionHistoryModalProps) {
+  const { message } = App.useApp();
   const [versions, setVersions] = useState<VersionData[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedVersion, setSelectedVersion] = useState<VersionData | null>(null);

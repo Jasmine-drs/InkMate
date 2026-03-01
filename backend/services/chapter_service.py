@@ -157,3 +157,13 @@ class ChapterService:
             )
         )
         return result.scalar_one_or_none()
+
+    async def get_next_chapter_number(self, project_id: str) -> int:
+        """获取下一个可用的章节号"""
+        result = await self.db.execute(
+            select(func.max(Chapter.chapter_number)).where(
+                Chapter.project_id == project_id
+            )
+        )
+        max_number = result.scalar() or 0
+        return max_number + 1

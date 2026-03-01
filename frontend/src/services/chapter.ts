@@ -147,3 +147,13 @@ export const saveChapterDraft = async (
 ): Promise<ChapterData> => {
   return updateChapter(projectId, chapterId, { title, content }, true);
 };
+
+/**
+ * 获取下一个可用的章节号
+ */
+export const getNextChapterNumber = async (
+  projectId: string
+): Promise<number> => {
+  const result = await api.get(`/projects/${projectId}/chapters/next-number`) as { next_number: number };
+  return result.next_number;
+};
