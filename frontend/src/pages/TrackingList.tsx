@@ -19,9 +19,6 @@ import {
   Spin,
   App,
   Popconfirm,
-  Modal,
-  Form,
-  Drawer,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
@@ -33,14 +30,13 @@ import {
   FilterOutlined,
   UserOutlined,
   PushpinOutlined,
-  BoxOutlined,
+  GiftOutlined,
   ClockCircleOutlined,
   FolderOutlined,
 } from '@ant-design/icons';
 import {
   getTrackingList,
   deleteTracking,
-  getTrackingByEntity,
   type TrackingData,
 } from '@/services/tracking';
 import { ROUTES } from '@/pages/SettingsEditor';
@@ -66,7 +62,7 @@ const trackingTypeConfig: Record<string, { label: string; color: string; icon: J
   item: {
     label: '物品追踪',
     color: 'orange',
-    icon: <BoxOutlined />,
+    icon: <GiftOutlined />,
   },
   timeline: {
     label: '时间线',
@@ -95,7 +91,7 @@ export default function TrackingList() {
   // 获取追踪列表
   const { data, isLoading, error } = useQuery({
     queryKey: ['tracking', id],
-    queryFn: () => getTrackingList(id!, 1, 100),
+    queryFn: () => getTrackingList(id!, { page: 1, page_size: 100 }),
     enabled: !!id,
   });
 
@@ -300,7 +296,7 @@ export default function TrackingList() {
                 allowClear
                 style={{ width: 150 }}
                 onChange={(value) => setTypeFilter(value)}
-                options={Object.entries(trackingTypeConfig).map(([value, { label, color, icon }]) => ({
+                options={Object.entries(trackingTypeConfig).map(([value, { label, icon }]) => ({
                   value,
                   label,
                   icon,

@@ -27,8 +27,8 @@ import { RichTextEditor, insertTokenToEditor, finishEditorStreaming } from '@/co
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { updateChapter, getChapterById, createChapter, getNextChapterNumber } from '@/services/chapter';
 import { getProject } from '@/services/project';
-import { VersionHistoryModal } from '@/components/VersionHistoryModal';
-import { AIChatModal } from '@/components/AIChatModal';
+import VersionHistoryModal from '@/components/VersionHistoryModal';
+import AIChatModal from '@/components/AIChatModal';
 import { continueWritingStream, type ContinueWritingOptions, StreamingError } from '@/services/ai';
 import './Editor.css';
 
@@ -220,7 +220,7 @@ export default function Editor() {
             break;
           case 'server':
             // 服务器错误
-            message.error(`服务器错误：${error.message}`);
+            message.error(`内部服务器错误，请稍后重试`);
             break;
           case 'parse':
             // 解析错误，保留已生成内容

@@ -3,7 +3,7 @@
  * 支持 5 种对话模式：通用咨询、创作咨询、设定查询、灵感激发、问题诊断
  */
 import { useState, useRef, useEffect } from 'react';
-import { Modal, Input, Button, Space, Select, Spin, Typography, Divider, App } from 'antd';
+import { Modal, Input, Button, Space, Select, Spin, Typography, App } from 'antd';
 import { RobotOutlined, SendOutlined, StopOutlined, DeleteOutlined } from '@ant-design/icons';
 import { chatStream, type ChatContextType, type StreamCallbacks } from '@/services/chat';
 
@@ -42,7 +42,7 @@ export default function AIChatModal({
   onClose,
   projectId,
   chapterId,
-  initialContext,
+  initialContext: _initialContext,
 }: AIChatModalProps) {
   const { message } = App.useApp();
   const [contextMode, setContextMode] = useState<ContextMode>('general');
@@ -163,7 +163,6 @@ export default function AIChatModal({
         </Space>
       }
       open={visible}
-      onClose={onClose}
       onCancel={onClose}
       footer={null}
       width={600}
