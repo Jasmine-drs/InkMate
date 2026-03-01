@@ -138,7 +138,11 @@ export default function ProjectDetail() {
                       </div>
                       <Title level={5}>暂无章节</Title>
                       <Text className="module-text">开始创建你的第一章故事吧</Text>
-                      <Button type="primary" className="create-chapter-btn">
+                      <Button
+                        type="primary"
+                        className="create-chapter-btn"
+                        onClick={() => navigate(`/editor/${id}/new`)}
+                      >
                         <FireOutlined /> 创建第一章
                       </Button>
                     </div>
@@ -161,7 +165,11 @@ export default function ProjectDetail() {
                       </div>
                       <Title level={5}>暂无角色</Title>
                       <Text className="module-text">创建你的角色卡片，记录人物设定</Text>
-                      <Button type="primary" className="create-character-btn">
+                      <Button
+                        type="primary"
+                        className="create-character-btn"
+                        onClick={() => navigate(`/editor/${id}/new`)}
+                      >
                         <UserOutlined /> 创建角色
                       </Button>
                     </div>
@@ -184,7 +192,11 @@ export default function ProjectDetail() {
                       </div>
                       <Title level={5}>暂无设定</Title>
                       <Text className="module-text">构建你的世界观，让故事更加丰富</Text>
-                      <Button type="primary" className="create-setting-btn">
+                      <Button
+                        type="primary"
+                        className="create-setting-btn"
+                        onClick={() => navigate(`/editor/${id}/new`)}
+                      >
                         <SettingOutlined /> 添加设定
                       </Button>
                     </div>
