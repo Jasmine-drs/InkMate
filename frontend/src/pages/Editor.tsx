@@ -25,8 +25,9 @@ import {
 import { RichTextEditor } from '@/components/RichTextEditor';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { getChapter, updateChapter, getChapterById, createChapter, getNextChapterNumber } from '@/services/chapter';
+import { getProject } from '@/services/project';
 import { VersionHistoryModal } from '@/components/VersionHistoryModal';
-import { continueWritingStream } from '@/services/ai';
+import { continueWritingStream, type ContinueWritingOptions } from '@/services/ai';
 import { ROUTES } from '@/pages/SettingsEditor';
 import './Editor.css';
 
@@ -45,6 +46,23 @@ export default function Editor() {
   const [_isNewChapter, setIsNewChapter] = useState(false);
   const [versionHistoryVisible, setVersionHistoryVisible] = useState(false);
   const [isAIGenerating, setIsAIGenerating] = useState(false);
+  const [projectSettings, setProjectSettings] = useState<Record<string, unknown> | undefined>(undefined);
+
+  // 加载项目设定
+  useEffect(() => {
+    const loadProjectSettings = async () => {
+      if (!projectId) return;
+      try {
+        const project = await getProject(projectId);
+        if (project.settings) {
+          setProjectSettings(project.settings as Record<string, unknown>);
+        }
+      } catch (error) {
+        console.error('加载项目设定失败:', error);
+      }
+    };
+    loadProjectSettings();
+  }, [projectId]);
 
   // 自动保存 Hook
   const [createdChapterId, setCreatedChapterId] = useState<string | undefined>(undefined);
@@ -168,9 +186,16 @@ export default function Editor() {
     const hide = message.loading('AI 正在创作...', 0);
 
     try {
+      // 构建设定联动选项
+      const options: ContinueWritingOptions = {};
+      if (projectSettings) {
+        options.settings = projectSettings as Record<string, string | undefined>;
+      }
+      // TODO: 添加大纲和角色信息的传递
+
       await continueWritingStream(content, (token) => {
         setContent((prev) => prev + token);
-      });
+      }, options);
       hide();
       message.success('AI 续写完成');
     } catch (error: unknown) {
@@ -303,7 +328,7 @@ export default function Editor() {
             icon={<RobotOutlined />}
             onClick={handleAIContinue}
             loading={isAIGenerating}
-            disabled={!content || isAIGenerating}
+            disabled={wordCount === 0 || isAIGenerating}
           >
             {isAIGenerating ? '生成中...' : 'AI 续写'}
           </Button>
@@ -313,8 +338,8 @@ export default function Editor() {
             icon={<SaveOutlined />}
             onClick={handleSaveNow}
             loading={isSaving}
-            disabled={!projectId || content.trim().length === 0}
-            title={content.trim().length === 0 ? '内容为空，无法保存' : '保存章节'}
+            disabled={!projectId || wordCount === 0}
+            title={wordCount === 0 ? '内容为空，无法保存' : '保存章节'}
           >
             {isSaving ? '保存中...' : '保存'}
           </Button>

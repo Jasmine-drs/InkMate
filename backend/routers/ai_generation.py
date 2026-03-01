@@ -92,6 +92,8 @@ class ContinueRequest(BaseModel):
     content: str = Field(..., description="已有内容")
     outline: Optional[str] = Field(None, description="大纲")
     length: str = Field("medium", description="续写长度：short/medium/long")
+    settings: Optional[dict] = Field(None, description="世界观设定")
+    characters: Optional[str] = Field(None, description="角色信息")
 
 
 class RewriteRequest(BaseModel):
@@ -222,6 +224,8 @@ async def continue_writing_stream(
                 content=request.content,
                 outline=request.outline,
                 length=request.length,
+                settings=request.settings,
+                characters=request.characters,
             ):
                 # 转义 JSON 特殊字符，确保换行符正确传输
                 escaped_token = token.replace('\\', '\\\\').replace('"', '\\"').replace('\n', '\\n')

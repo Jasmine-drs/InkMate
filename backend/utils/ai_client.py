@@ -190,6 +190,8 @@ class AIClient:
         content: str,
         outline: Optional[str] = None,
         length: str = "medium",  # short, medium, long
+        settings: Optional[dict] = None,  # 世界观设定
+        characters: Optional[str] = None,  # 角色信息
     ) -> AsyncGenerator[str, None]:
         """AI 续写（流式）"""
         if not self.api_key:
@@ -197,8 +199,27 @@ class AIClient:
             yield ""
             return
 
-        system_prompt = """你是一个专业的 AI 小说创作助手。
-请根据已有内容继续创作，保持风格一致，情节连贯。"""
+        # 构建系统提示
+        system_parts = ["你是一个专业的 AI 小说创作助手。"]
+
+        # 添加世界观设定到系统提示
+        if settings:
+            setting_parts = []
+            if settings.get('worldView'):
+                setting_parts.append(f"世界观：{settings['worldView']}")
+            if settings.get('powerSystem'):
+                setting_parts.append(f"力量体系：{settings['powerSystem']}")
+            if settings.get('magic'):
+                setting_parts.append(f"魔法设定：{settings['magic']}")
+            if setting_parts:
+                system_parts.append("\n=== 世界观设定 ===\n" + "\n".join(setting_parts))
+
+        # 添加角色信息
+        if characters:
+            system_parts.append(f"\n=== 角色信息 ===\n{characters}")
+
+        system_parts.append("\n请根据已有内容和设定继续创作，保持风格一致，情节连贯，符合世界观设定。")
+        system_prompt = "".join(system_parts)
 
         length_map = {
             "short": "续写 200-300 字",
@@ -206,10 +227,15 @@ class AIClient:
             "long": "续写 1000-1500 字",
         }
 
-        prompt = f"""已有内容：
-{content}
+        # 构建用户提示
+        prompt_parts = [f"已有内容：\n{content}"]
 
-请继续创作，{length_map.get(length, length_map['medium'])}。保持文风一致，情节自然发展。"""
+        if outline:
+            prompt_parts.append(f"\n本章大纲：\n{outline}")
+
+        prompt_parts.append(f"\n请继续创作，{length_map.get(length, length_map['medium'])}。保持文风一致，情节自然发展。")
+
+        prompt = "\n".join(prompt_parts)
 
         client = await self._get_client()
         messages = self._build_chat_prompt(system_prompt, prompt)

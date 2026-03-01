@@ -158,9 +158,21 @@ export const generateStream = async (
 /**
  * 流式续写（使用真正的 SSE 流式接口）
  */
+export interface ContinueWritingOptions {
+  outline?: string;      // 大纲
+  settings?: {           // 世界观设定
+    worldView?: string;
+    powerSystem?: string;
+    magic?: string;
+    [key: string]: string | undefined;
+  };
+  characters?: string;   // 角色信息
+}
+
 export const continueWritingStream = async (
   content: string,
-  onToken: (token: string) => void
+  onToken: (token: string) => void,
+  options?: ContinueWritingOptions
 ): Promise<string> => {
   const token = localStorage.getItem('access_token');
 
@@ -171,7 +183,13 @@ export const continueWritingStream = async (
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
-      body: JSON.stringify({ content, length: 'medium' }),
+      body: JSON.stringify({
+        content,
+        length: 'medium',
+        outline: options?.outline,
+        settings: options?.settings,
+        characters: options?.characters,
+      }),
     });
 
     if (!response.ok) {
