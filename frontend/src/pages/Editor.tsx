@@ -26,6 +26,7 @@ import { RichTextEditor } from '@/components/RichTextEditor';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { getChapter, updateChapter, getChapterById } from '@/services/chapter';
 import { VersionHistoryModal } from '@/components/VersionHistoryModal';
+import { continueWritingStream } from '@/services/ai';
 import './Editor.css';
 
 const { Header, Content, Sider } = Layout;
@@ -41,6 +42,7 @@ export default function Editor() {
   const [wordCount, setWordCount] = useState(0);
   const [_isNewChapter, setIsNewChapter] = useState(false);
   const [versionHistoryVisible, setVersionHistoryVisible] = useState(false);
+  const [isAIGenerating, setIsAIGenerating] = useState(false);
 
   // 自动保存 Hook
   const {
@@ -141,9 +143,32 @@ export default function Editor() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleSaveNow]);
 
-  const handleAIContinue = () => {
-    // TODO: AI 续写功能
-    message.info('AI 续写功能开发中...');
+  const handleAIContinue = async () => {
+    if (!content) {
+      message.warning('请先输入一些内容再续写');
+      return;
+    }
+    if (isAIGenerating) {
+      message.info('AI 正在生成中，请稍候...');
+      return;
+    }
+
+    setIsAIGenerating(true);
+    message.loading('AI 正在创作...', 0);
+
+    try {
+      await continueWritingStream(content, (token) => {
+        setContent((prev) => prev + token);
+      });
+      message.destroy();
+      message.success('AI 续写完成');
+    } catch (error: any) {
+      console.error('AI 续写失败:', error);
+      message.destroy();
+      message.error('AI 续写失败：' + (error.message || '请稍后重试'));
+    } finally {
+      setIsAIGenerating(false);
+    }
   };
 
   // 处理版本恢复
@@ -229,8 +254,10 @@ export default function Editor() {
             className="ai-btn"
             icon={<RobotOutlined />}
             onClick={handleAIContinue}
+            loading={isAIGenerating}
+            disabled={!content || isAIGenerating}
           >
-            AI 续写
+            {isAIGenerating ? '生成中...' : 'AI 续写'}
           </Button>
           <Button
             className="save-btn"
