@@ -1,11 +1,11 @@
 import { Outlet, Navigate, useNavigate } from 'react-router-dom';
 import { useUserStore } from '@/store/userStore';
-import { ConfigProvider } from 'antd';
+import { ConfigProvider, App } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 import { useEffect } from 'react';
 import { getCurrentUser } from '@/services/user';
 
-function App() {
+function AppRoot() {
   const { isAuthenticated, user, setAuth } = useUserStore();
   const navigate = useNavigate();
 
@@ -32,22 +32,24 @@ function App() {
   }
 
   return (
-    <ConfigProvider
-      locale={zhCN}
-      theme={{
-        token: {
-          colorPrimary: '#F97316',
-          borderRadius: 10,
-          colorBgLayout: '#0A0E1A',
-          colorText: '#F8FAFC',
-          colorBgContainer: '#0F1425',
-          colorBorder: '#1E293B',
-        },
-      }}
-    >
-      <Outlet />
-    </ConfigProvider>
+    <App>
+      <ConfigProvider
+        locale={zhCN}
+        theme={{
+          token: {
+            colorPrimary: '#F97316',
+            borderRadius: 10,
+            colorBgLayout: '#0A0E1A',
+            colorText: '#F8FAFC',
+            colorBgContainer: '#0F1425',
+            colorBorder: '#1E293B',
+          },
+        }}
+      >
+        <Outlet />
+      </ConfigProvider>
+    </App>
   );
 }
 
-export default App;
+export default AppRoot;

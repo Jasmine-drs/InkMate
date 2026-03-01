@@ -14,7 +14,6 @@ import json
 import time
 from loguru import logger
 from config import settings
-from config import settings
 
 router = APIRouter(prefix="/ai", tags=["AI 生成"])
 
@@ -69,22 +68,6 @@ async def check_rate_limit(user_id: str) -> bool:
         logger.debug(f"速率限制检查失败：{e}")
         # 如果 Redis 不可用，不限制请求
         return True
-
-
-def rate_limit_decorator(func):
-    """速率限制装饰器"""
-    from functools import wraps
-
-    @wraps(func)
-    async def wrapper(*args, current_user: User = Depends(get_current_user), **kwargs):
-        if not await check_rate_limit(current_user.id):
-            raise HTTPException(
-                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail=f"请求过于频繁，请稍后再试（限制：{settings.RATE_LIMIT_REQUESTS} 次/分钟）"
-            )
-        return await func(*args, current_user=current_user, **kwargs)
-
-    return wrapper
 
 
 class GenerateRequest(BaseModel):

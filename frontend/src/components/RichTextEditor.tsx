@@ -38,9 +38,15 @@ export function RichTextEditor({ content, onChange, onSave, onAIContinue }: Rich
   });
 
   // 监听 content 变化，同步更新编辑器内容（用于从版本历史恢复）
+  // 注意：AI 流式续写时不通过此方式更新，而是直接操作编辑器避免光标跳动
   useEffect(() => {
     if (editor && content !== editor.getHTML()) {
+      // 保存当前光标位置
+      const { from } = editor.state.selection;
+      // 设置内容并尝试保持选区
       editor.commands.setContent(content);
+      // 恢复光标位置（如果可能）
+      editor.commands.setTextSelection(Math.min(from, editor.state.doc.content.size));
     }
   }, [content, editor]);
 

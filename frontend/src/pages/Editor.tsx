@@ -12,7 +12,7 @@ import {
   Divider,
   Tag,
   Popconfirm,
-  App,
+  message,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -24,7 +24,7 @@ import {
 } from '@ant-design/icons';
 import { RichTextEditor } from '@/components/RichTextEditor';
 import { useAutoSave } from '@/hooks/useAutoSave';
-import { getChapter, updateChapter, getChapterById, createChapter } from '@/services/chapter';
+import { getChapter, updateChapter, getChapterById, createChapter, getNextChapterNumber } from '@/services/chapter';
 import { VersionHistoryModal } from '@/components/VersionHistoryModal';
 import { continueWritingStream } from '@/services/ai';
 import './Editor.css';
@@ -33,7 +33,6 @@ const { Header, Content, Sider } = Layout;
 const { Title, Text } = Typography;
 
 export default function Editor() {
-  const { message } = App.useApp();
   const { projectId, chapterId } = useParams<{ projectId: string; chapterId: string }>();
   const navigate = useNavigate();
 
@@ -68,8 +67,8 @@ export default function Editor() {
       // 如果是新建章节，使用创建接口
       if (!chapterId || chapterId === 'new') {
         if (!createdChapterId) {
-          // 首次创建，提取章节号（从标题或默认 1）
-          const chapterNum = 1; // TODO: 获取下一个可用章节号
+          // 获取下一个可用章节号
+          const chapterNum = await getNextChapterNumber(projectId);
           const result = await createChapter(projectId, {
             chapter_number: chapterNum,
             title,
@@ -218,10 +217,7 @@ export default function Editor() {
   const handleViewOutline = () => {
     if (projectId) {
       // TODO: 导航到大纲页面或打开大纲弹窗
-      message.open({
-        type: 'info',
-        content: '大纲功能开发中...',
-      });
+      message.info('大纲功能开发中...');
     }
   };
 
@@ -229,10 +225,7 @@ export default function Editor() {
   const handleViewCharacters = () => {
     if (projectId) {
       // TODO: 导航到角色页面或打开角色弹窗
-      message.open({
-        type: 'info',
-        content: '角色功能开发中...',
-      });
+      message.info('角色功能开发中...');
     }
   };
 

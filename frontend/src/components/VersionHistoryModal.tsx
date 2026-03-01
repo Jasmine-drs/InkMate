@@ -143,7 +143,9 @@ export function VersionHistoryModal({
               <List
                 dataSource={versions}
                 renderItem={(version) => {
-                  const isCurrent = version.version_number === 1; // 假设 version 1 是当前
+                  // 获取列表中的第一个元素（最新版本）来判断是否是当前版本
+                  const currentVersion = versions[0];
+                  const isCurrent = currentVersion?.id === version.id;
                   const isSelected = selectedVersion?.id === version.id;
                   return (
                     <List.Item
@@ -157,6 +159,7 @@ export function VersionHistoryModal({
                         <Text>
                           {dayjs(version.created_at).format('YYYY-MM-DD HH:mm:ss')}
                         </Text>
+                        {isCurrent && <Text type="secondary">（当前版本）</Text>}
                         {isSelected && <FileTextOutlined />}
                       </Space>
                     </List.Item>
