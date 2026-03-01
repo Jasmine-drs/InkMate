@@ -38,13 +38,13 @@ interface SettingsFormValues {
   timeSetting?: string;
   locationSetting?: string;
   powerSystem?: string;
+  magic?: string;
   socialStructure?: string;
   technology?: string;
   culture?: string;
   history?: string;
   creatures?: string;
   other?: string;
-  [key: string]: string | undefined;
 }
 
 // 路由常量
@@ -157,7 +157,7 @@ export default function SettingsEditor() {
     setSaving(true);
     try {
       await form.validateFields();
-      const values = form.getFieldsValue();
+      const values = form.getFieldsValue() as Record<string, unknown>;
       await updateProject(projectId, { settings: values });
       setHasUnsavedChanges(false);
       if (!silent) {
