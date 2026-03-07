@@ -180,6 +180,7 @@
 |----|------|--------|----------|------|----------|
 | ENV-001 | 安装 Codex Superpowers 技能集 | P2 | 15m | ✅ DONE | `git clone` + 软链检查 |
 | ENV-002 | 更新 AGENTS Git 提交纪律 | P2 | 10m | ✅ DONE | 文档检查 |
+| ENV-003 | 全局安装 UI UX Pro Max Codex 技能 | P2 | 15m | ✅ DONE | `uipro init --ai codex` + 文件检查 |
 
 ---
 
@@ -236,3 +237,6 @@
 - 当前版本：`main` 分支，提交 `e4a2375cb705ca5800f0833528ce36a3faf9017a`
 - 技能发现软链：`/mnt/c/Users/drs31/.agents/skills/superpowers -> /mnt/c/Users/drs31/.codex/superpowers/skills`
 - ENV-002 已完成：`AGENTS.md` 新增 Git 提交纪律，要求每个可独立提交的任务在校验通过后立即提交。
+- ENV-003 已完成：通过全局 CLI `uipro-cli` 2.2.3 执行 `uipro init --ai codex`。
+- 安装位置：`/mnt/c/Users/drs31/.codex/skills/ui-ux-pro-max`
+- 校验结果：`SKILL.md`、`data/*.csv`、`scripts/search.py` 已生成。
