@@ -19,9 +19,11 @@ import {
   FileTextOutlined,
 } from '@ant-design/icons';
 import DOMPurify from 'dompurify';
+import { getChapterVersions } from '@/services/chapter';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/zh-cn';
+import './VersionHistoryModal.css';
 
 // 配置 dayjs
 dayjs.extend(relativeTime);
@@ -40,9 +42,25 @@ interface VersionHistoryModalProps {
   visible: boolean;
   projectId: string;
   chapterId: string;
-  _currentContent?: string;
+  currentContent?: string;
   onClose: () => void;
   onRestore: (version: number, content: string) => void;
+}
+
+function extractParagraphs(content: string): string[] {
+  const container = document.createElement('div');
+  container.innerHTML = DOMPurify.sanitize(content || '');
+
+  const blockTexts = Array.from(container.querySelectorAll('h1, h2, h3, p, li, blockquote, pre'))
+    .map((node) => node.textContent?.replace(/\s+/g, ' ').trim() || '')
+    .filter(Boolean);
+
+  if (blockTexts.length > 0) {
+    return blockTexts;
+  }
+
+  const plainText = container.textContent?.replace(/\s+/g, ' ').trim() || '';
+  return plainText ? [plainText] : ['无内容'];
 }
 
 /**
@@ -52,6 +70,7 @@ export function VersionHistoryModal({
   visible,
   projectId,
   chapterId,
+  currentContent = '',
   onClose,
   onRestore,
 }: VersionHistoryModalProps) {
@@ -59,6 +78,7 @@ export function VersionHistoryModal({
   const [versions, setVersions] = useState<VersionData[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedVersion, setSelectedVersion] = useState<VersionData | null>(null);
+  const [compareMode, setCompareMode] = useState(false);
 
   // 加载版本历史
   useEffect(() => {
@@ -67,10 +87,16 @@ export function VersionHistoryModal({
     }
   }, [visible, projectId, chapterId]);
 
+  useEffect(() => {
+    if (!visible) {
+      setCompareMode(false);
+      setSelectedVersion(null);
+    }
+  }, [visible]);
+
   const loadVersions = async () => {
     setLoading(true);
     try {
-      const { getChapterVersions } = await import('@/services/chapter');
       const result = await getChapterVersions(projectId, chapterId, 1, 50);
       setVersions((result.items || []).map((item) => ({
         id: item.id,
@@ -86,10 +112,9 @@ export function VersionHistoryModal({
     }
   };
 
-  const handleCompare = async () => {
+  const handleCompare = () => {
     if (!selectedVersion) return;
-    // TODO: 实现版本对比功能
-    message.info('版本对比功能开发中...');
+    setCompareMode((prev) => !prev);
   };
 
   const handleRestore = () => {
@@ -98,6 +123,16 @@ export function VersionHistoryModal({
     onClose();
     message.success(`已恢复到版本 ${selectedVersion.version_number}`);
   };
+
+  const currentParagraphs = extractParagraphs(currentContent);
+  const selectedParagraphs = selectedVersion ? extractParagraphs(selectedVersion.content) : [];
+  const compareRows = selectedVersion
+    ? Array.from({ length: Math.max(currentParagraphs.length, selectedParagraphs.length) }, (_, index) => ({
+        index,
+        current: currentParagraphs[index] || '（无内容）',
+        selected: selectedParagraphs[index] || '（无内容）',
+      }))
+    : [];
 
   return (
     <Modal
@@ -109,7 +144,7 @@ export function VersionHistoryModal({
       }
       open={visible}
       onCancel={onClose}
-      width={800}
+      width={compareMode ? 1180 : 800}
       footer={
         <Space>
           <Button onClick={onClose}>关闭</Button>
@@ -144,7 +179,10 @@ export function VersionHistoryModal({
                   return (
                     <List.Item
                       className={`version-item ${isSelected ? 'selected' : ''}`}
-                      onClick={() => setSelectedVersion(version)}
+                      onClick={() => {
+                        setSelectedVersion(version);
+                        setCompareMode(false);
+                      }}
                     >
                       <Space>
                         <Tag color={isCurrent ? 'green' : 'blue'}>
@@ -166,16 +204,37 @@ export function VersionHistoryModal({
             {selectedVersion && (
               <div className="version-preview">
                 <Title level={5}>
-                  版本 {selectedVersion.version_number} 预览
+                  {compareMode ? `版本 ${selectedVersion.version_number} 对比` : `版本 ${selectedVersion.version_number} 预览`}
                 </Title>
-                <div className="version-content">
-                  <div
-                    className="content-preview"
-                    dangerouslySetInnerHTML={{
-                      __html: DOMPurify.sanitize(selectedVersion.content || '<p>无内容</p>'),
-                    }}
-                  />
-                </div>
+
+                {compareMode ? (
+                  <div className="version-compare-grid">
+                    {compareRows.map((row) => {
+                      const changed = row.current !== row.selected;
+                      return (
+                        <div key={row.index} className="compare-row">
+                          <div className={`compare-column ${changed ? 'changed' : ''}`}>
+                            <Text className="compare-label">当前内容 · 段落 {row.index + 1}</Text>
+                            <div className="compare-text">{row.current}</div>
+                          </div>
+                          <div className={`compare-column ${changed ? 'changed' : ''}`}>
+                            <Text className="compare-label">历史版本 · 段落 {row.index + 1}</Text>
+                            <div className="compare-text">{row.selected}</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="version-content">
+                    <div
+                      className="content-preview"
+                      dangerouslySetInnerHTML={{
+                        __html: DOMPurify.sanitize(selectedVersion.content || '<p>无内容</p>'),
+                      }}
+                    />
+                  </div>
+                )}
 
                 {/* 对比视图 */}
                 <div className="version-compare">
@@ -184,7 +243,7 @@ export function VersionHistoryModal({
                     onClick={handleCompare}
                     icon={<FileTextOutlined />}
                   >
-                    对比当前版本
+                    {compareMode ? '返回预览' : '对比当前版本'}
                   </Button>
                 </div>
               </div>

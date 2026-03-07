@@ -1,0 +1,123 @@
+.version-history {
+  min-height: 360px;
+}
+
+.version-layout {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 20px;
+}
+
+.version-list {
+  padding-right: 12px;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.version-list .ant-typography {
+  color: var(--text-primary) !important;
+}
+
+.version-item {
+  cursor: pointer;
+  padding-inline: 12px !important;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+}
+
+.version-item:hover {
+  background: rgba(230, 126, 34, 0.08);
+}
+
+.version-item.selected {
+  background: rgba(230, 126, 34, 0.12);
+  border: 1px solid rgba(230, 126, 34, 0.18);
+}
+
+.version-preview {
+  min-width: 0;
+}
+
+.version-preview .ant-typography {
+  color: var(--text-primary) !important;
+}
+
+.version-content {
+  min-height: 320px;
+  max-height: 520px;
+  overflow-y: auto;
+  padding: 20px;
+  border-radius: var(--radius-md);
+  background: rgba(20, 33, 54, 0.45);
+  border: 1px solid var(--border-primary);
+}
+
+.content-preview {
+  color: var(--text-secondary);
+  line-height: 1.8;
+}
+
+.content-preview p:first-child {
+  margin-top: 0;
+}
+
+.version-compare {
+  margin-top: 16px;
+}
+
+.version-compare-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: 560px;
+  overflow-y: auto;
+}
+
+.compare-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.compare-column {
+  min-width: 0;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-primary);
+  background: rgba(20, 33, 54, 0.45);
+}
+
+.compare-column.changed {
+  border-color: rgba(230, 126, 34, 0.28);
+  background: rgba(230, 126, 34, 0.08);
+}
+
+.compare-label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--orange-400) !important;
+  font-size: 12px !important;
+}
+
+.compare-text {
+  color: var(--text-secondary);
+  line-height: 1.75;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+@media (max-width: 960px) {
+  .version-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .version-list {
+    padding-right: 0;
+    padding-bottom: 12px;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .compare-row {
+    grid-template-columns: 1fr;
+  }
+}

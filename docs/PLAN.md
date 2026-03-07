@@ -241,9 +241,11 @@
 - 已完成第一批 P0 修复：导出路由归一、tracking 列表参数修正、chat 章节校验修正、项目更新鉴权顺序修正、AIChatModal 流式状态修正。
 - 同链路低风险补洞已一并处理：清理了 `export.py` 的重复路由定义，并让非流式 chat 也复用同一套项目/章节校验。
 - 已完成 AUDIT-006：项目详情页已改为真实概览页，角色/设定/大纲/单元/追踪 5 个 Tab 均接入真实数据预览与查看全部入口。
+- 已完成 AUDIT-007：编辑器已支持查看本章大纲和章节内匹配角色，并在版本历史中提供双栏段落级“对比当前版本”视图。
 - 本轮验证结果：
   1. `frontend: npm run build` 通过
   2. `backend: python3 -m compileall backend` 通过
   3. 基于代码级定向检查确认导出前缀已收敛为 `/export`，不再存在 `/api/api/export`
   4. 由于本机缺少可直接激活的后端 conda 环境，未完成 FastAPI 运行态路由枚举验证
   5. `frontend: npm run build` 在 AUDIT-006 完成后再次通过
+  6. `frontend: npm run build` 在 AUDIT-007 完成后再次通过

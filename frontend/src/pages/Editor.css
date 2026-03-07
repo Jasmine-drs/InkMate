@@ -406,6 +406,58 @@
   transform: translateY(-1px);
 }
 
+.drawer-loading,
+.drawer-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 220px;
+}
+
+.quick-panel-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.quick-panel-body {
+  padding: 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-primary);
+  background: rgba(20, 33, 54, 0.45);
+  line-height: 1.8;
+}
+
+.quick-panel-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.quick-panel-item {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-primary);
+  background: rgba(20, 33, 54, 0.45);
+}
+
+.quick-panel-item-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.quick-panel-item-description {
+  color: var(--text-tertiary) !important;
+  line-height: 1.7 !important;
+}
+
 /* ========================================
    Popconfirm 弹窗样式 - 深色主题
    使用 overlayClassName="dark-popconfirm" 针对性覆盖

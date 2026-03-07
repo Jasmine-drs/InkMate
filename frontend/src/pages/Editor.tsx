@@ -13,6 +13,9 @@ import {
   Tag,
   Popconfirm,
   App,
+  Drawer,
+  Empty,
+  Spin,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -26,6 +29,8 @@ import {
 import { RichTextEditor, insertTokenToEditor, finishEditorStreaming } from '@/components/RichTextEditor';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { updateChapter, getChapterById, createChapter, getNextChapterNumber } from '@/services/chapter';
+import { getOutlineList, type OutlineData } from '@/services/outline';
+import { getCharacterList, type CharacterData } from '@/services/character';
 import { getProject } from '@/services/project';
 import VersionHistoryModal from '@/components/VersionHistoryModal';
 import AIChatModal from '@/components/AIChatModal';
@@ -35,6 +40,14 @@ import './Editor.css';
 const { Header, Content, Sider } = Layout;
 const { Title, Text } = Typography;
 
+function stripHtmlContent(input: string): string {
+  if (!input) return '';
+
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = input;
+  return tempDiv.textContent?.replace(/\s+/g, ' ').trim() || '';
+}
+
 export default function Editor() {
   const { message } = App.useApp();
   const { projectId, chapterId } = useParams<{ projectId: string; chapterId: string }>();
@@ -42,11 +55,18 @@ export default function Editor() {
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [chapterNumber, setChapterNumber] = useState<number | null>(null);
   const [wordCount, setWordCount] = useState(0);
   const [versionHistoryVisible, setVersionHistoryVisible] = useState(false);
   const [isAIGenerating, setIsAIGenerating] = useState(false);
   const [projectSettings, setProjectSettings] = useState<Record<string, unknown> | undefined>(undefined);
   const [chatModalVisible, setChatModalVisible] = useState(false);
+  const [outlineDrawerVisible, setOutlineDrawerVisible] = useState(false);
+  const [characterDrawerVisible, setCharacterDrawerVisible] = useState(false);
+  const [outlineLoading, setOutlineLoading] = useState(false);
+  const [characterLoading, setCharacterLoading] = useState(false);
+  const [currentChapterOutline, setCurrentChapterOutline] = useState<OutlineData | null>(null);
+  const [matchedCharacters, setMatchedCharacters] = useState<CharacterData[]>([]);
 
   // 加载项目设定
   useEffect(() => {
@@ -106,6 +126,7 @@ export default function Editor() {
             });
             if (result && result.id) {
               createdChapterIdRef.current = result.id;
+              setChapterNumber(chapterNum);
               // 更新 URL 为新章节 ID
               navigate(`/editor/${projectId}/${result.id}`, { replace: true });
               return; // 新建成功直接返回，后续逻辑由 Hook 处理
@@ -135,6 +156,7 @@ export default function Editor() {
       if (!chapterId || chapterId === 'new') {
         setTitle('');
         setContent('');
+        setChapterNumber(null);
         return;
       }
 
@@ -145,6 +167,7 @@ export default function Editor() {
         if (chapter) {
           setTitle(chapter.title || '');
           setContent(chapter.content || '');
+          setChapterNumber(chapter.chapter_number);
         }
       } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : '加载章节失败';
@@ -297,18 +320,55 @@ export default function Editor() {
 
   // 查看大纲处理
   const handleViewOutline = () => {
-    if (projectId) {
-      // TODO: 导航到大纲页面或打开大纲弹窗
-      message.info('大纲功能开发中...');
+    if (!projectId) return;
+    if (!chapterNumber) {
+      message.warning('请先保存章节后再查看本章大纲');
+      return;
     }
+
+    setOutlineDrawerVisible(true);
+    setOutlineLoading(true);
+
+    getOutlineList(projectId, 'chapter', null, 1, 100)
+      .then((result) => {
+        const outline = (result.items || []).find((item) => item.chapter_number === chapterNumber) || null;
+        setCurrentChapterOutline(outline);
+      })
+      .catch((error: unknown) => {
+        const errorMessage = error instanceof Error ? error.message : '加载大纲失败';
+        setCurrentChapterOutline(null);
+        message.error(`加载大纲失败：${errorMessage}`);
+      })
+      .finally(() => setOutlineLoading(false));
   };
 
   // 查看角色处理
   const handleViewCharacters = () => {
-    if (projectId) {
-      // TODO: 导航到角色页面或打开角色弹窗
-      message.info('角色功能开发中...');
-    }
+    if (!projectId) return;
+
+    setCharacterDrawerVisible(true);
+    setCharacterLoading(true);
+
+    getCharacterList(projectId, 1, 200)
+      .then((result) => {
+        const chapterText = stripHtmlContent(content);
+        const matches = (result.items || [])
+          .map((character) => ({
+            character,
+            matchIndex: chapterText.indexOf(character.name.trim()),
+          }))
+          .filter(({ matchIndex }) => matchIndex >= 0)
+          .sort((left, right) => left.matchIndex - right.matchIndex)
+          .map(({ character }) => character);
+
+        setMatchedCharacters(matches);
+      })
+      .catch((error: unknown) => {
+        const errorMessage = error instanceof Error ? error.message : '加载角色失败';
+        setMatchedCharacters([]);
+        message.error(`加载角色失败：${errorMessage}`);
+      })
+      .finally(() => setCharacterLoading(false));
   };
 
   return (
@@ -494,6 +554,7 @@ export default function Editor() {
           visible={versionHistoryVisible}
           projectId={projectId!}
           chapterId={chapterId}
+          currentContent={content}
           onClose={() => setVersionHistoryVisible(false)}
           onRestore={handleRestoreVersion}
         />
@@ -510,6 +571,91 @@ export default function Editor() {
           settings: projectSettings as Record<string, string> | undefined,
         }}
       />
+
+      <Drawer
+        title={chapterNumber ? `第${chapterNumber}章大纲` : '本章大纲'}
+        open={outlineDrawerVisible}
+        onClose={() => setOutlineDrawerVisible(false)}
+        width={420}
+        className="editor-drawer"
+        extra={
+          <Button type="link" onClick={() => projectId && navigate(`/project/${projectId}/outlines`)}>
+            查看全部大纲
+          </Button>
+        }
+      >
+        {outlineLoading ? (
+          <div className="drawer-loading">
+            <Spin />
+          </div>
+        ) : currentChapterOutline ? (
+          <div className="quick-panel-content">
+            <Tag color="green">章节细纲</Tag>
+            <Title level={5}>{`第${currentChapterOutline.chapter_number || chapterNumber}章`}</Title>
+            <div className="quick-panel-body">
+              <Text>{stripHtmlContent(currentChapterOutline.content || '暂无内容')}</Text>
+            </div>
+            <Button
+              type="primary"
+              onClick={() => navigate(`/project/${projectId}/outline/${currentChapterOutline.id}`)}
+            >
+              打开大纲详情
+            </Button>
+          </div>
+        ) : (
+          <div className="drawer-empty">
+            <Empty description="还没有为本章创建细纲" />
+            <Button type="primary" onClick={() => navigate(`/project/${projectId}/outlines`)}>
+              前往大纲管理
+            </Button>
+          </div>
+        )}
+      </Drawer>
+
+      <Drawer
+        title="出场角色"
+        open={characterDrawerVisible}
+        onClose={() => setCharacterDrawerVisible(false)}
+        width={420}
+        className="editor-drawer"
+        extra={
+          <Button type="link" onClick={() => projectId && navigate(`/project/${projectId}/characters`)}>
+            查看全部角色
+          </Button>
+        }
+      >
+        {characterLoading ? (
+          <div className="drawer-loading">
+            <Spin />
+          </div>
+        ) : matchedCharacters.length > 0 ? (
+          <div className="quick-panel-list">
+            {matchedCharacters.map((character) => (
+              <div key={character.id} className="quick-panel-item">
+                <div className="quick-panel-item-header">
+                  <Text strong>{character.name}</Text>
+                  {character.role_type && <Tag>{character.role_type}</Tag>}
+                </div>
+                <Text className="quick-panel-item-description">
+                  {(character.card_data?.brief as string | undefined) ||
+                    (character.card_data?.description as string | undefined) ||
+                    '暂无角色简介'}
+                </Text>
+                <Button type="link" onClick={() => navigate(`/project/${projectId}/character/${character.id}`)}>
+                  查看角色详情
+                </Button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="drawer-empty">
+            <Empty description="当前章节内容中暂未匹配到已登记角色" />
+            <Button type="primary" onClick={() => navigate(`/project/${projectId}/characters`)}>
+              前往角色管理
+            </Button>
+          </div>
+        )}
+      </Drawer>
     </Layout>
   );
 }
