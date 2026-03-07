@@ -284,6 +284,7 @@ async def extract_tracking_from_chapters(
             chapter_id=chapter.id,
             chapter_content=chapter.content or "",
             chapter_number=chapter.chapter_number,
+            tracking_types=request.tracking_types,
         )
 
         # 保存提取的追踪记录

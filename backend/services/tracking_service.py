@@ -23,6 +23,7 @@ class TrackingService:
         chapter_id: str,
         chapter_content: str,
         chapter_number: Optional[int] = None,
+        tracking_types: Optional[List[TrackingType | str]] = None,
     ) -> List[Dict[str, Any]]:
         """
         使用 AI 从章节内容自动提取状态追踪记录
@@ -95,6 +96,17 @@ class TrackingService:
             result = json.loads(response)
             extracted_trackings = result.get("trackings", [])
 
+            if tracking_types:
+                allowed_types = {
+                    tracking_type.value if isinstance(tracking_type, TrackingType) else str(tracking_type)
+                    for tracking_type in tracking_types
+                }
+                extracted_trackings = [
+                    tracking
+                    for tracking in extracted_trackings
+                    if tracking.get("tracking_type") in allowed_types
+                ]
+
             # 为每个提取的记录添加项目 ID 和章节信息
             for tracking in extracted_trackings:
                 tracking["project_id"] = project_id
@@ -137,7 +149,10 @@ class TrackingService:
                 )
 
                 # 创建追踪记录
-                tracking = await self.create_tracking_from_data(create_data)
+                tracking = await self.create_tracking_from_data(
+                    tracking_data["project_id"],
+                    create_data,
+                )
                 saved_trackings.append(tracking)
             except Exception as e:
                 # 单条记录保存失败，继续处理其他记录
@@ -146,11 +161,11 @@ class TrackingService:
         return saved_trackings
 
     async def create_tracking_from_data(
-        self, tracking_data: TrackingCreate
+        self, project_id: str, tracking_data: TrackingCreate
     ) -> TrackingRecord:
         """从 TrackingCreate 数据创建追踪记录"""
         tracking = TrackingRecord(
-            project_id=tracking_data.project_id if hasattr(tracking_data, 'project_id') else None,
+            project_id=project_id,
             tracking_type=tracking_data.tracking_type,
             entity_id=tracking_data.entity_id,
             chapter_number=tracking_data.chapter_number,

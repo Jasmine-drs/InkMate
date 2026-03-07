@@ -19,6 +19,9 @@ import {
   Spin,
   App,
   Popconfirm,
+  Modal,
+  Form,
+  List,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
@@ -33,12 +36,17 @@ import {
   GiftOutlined,
   ClockCircleOutlined,
   FolderOutlined,
+  RobotOutlined,
 } from '@ant-design/icons';
 import {
   getTrackingList,
   deleteTracking,
+  extractTrackingFromChapters,
+  TrackingType,
   type TrackingData,
+  type TrackingExtractResult,
 } from '@/services/tracking';
+import { getChapterList } from '@/services/chapter';
 import { ROUTES } from '@/pages/SettingsEditor';
 import TrackingDetailDrawer from '@/components/TrackingDetailDrawer';
 import TrackingFormModal from '@/components/TrackingFormModal';
@@ -47,6 +55,11 @@ import './TrackingList.css';
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
 const { Search } = Input;
+
+interface ExtractFormValues {
+  chapter_ids: string[];
+  tracking_types?: string[];
+}
 
 const trackingTypeConfig: Record<string, { label: string; color: string; icon: JSX.Element }> = {
   character_state: {
@@ -87,11 +100,21 @@ export default function TrackingList() {
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
   const [formModalOpen, setFormModalOpen] = useState(false);
   const [selectedTracking, setSelectedTracking] = useState<TrackingData | null>(null);
+  const [extractModalOpen, setExtractModalOpen] = useState(false);
+  const [extractResultModalOpen, setExtractResultModalOpen] = useState(false);
+  const [extractResults, setExtractResults] = useState<TrackingExtractResult[]>([]);
+  const [extractForm] = Form.useForm<ExtractFormValues>();
 
   // 获取追踪列表
   const { data, isLoading, error } = useQuery({
     queryKey: ['tracking', id],
     queryFn: () => getTrackingList(id!, { page: 1, page_size: 100 }),
+    enabled: !!id,
+  });
+
+  const { data: chaptersData } = useQuery({
+    queryKey: ['chapters', id, 'tracking-extract'],
+    queryFn: () => getChapterList(id!, 1, 200),
     enabled: !!id,
   });
 
@@ -105,6 +128,28 @@ export default function TrackingList() {
     onError: (error: unknown) => {
       const errorMessage = error instanceof Error ? error.message : '删除失败';
       message.error('删除失败：' + errorMessage);
+    },
+  });
+
+  const extractMutation = useMutation({
+    mutationFn: (values: ExtractFormValues) => extractTrackingFromChapters(id!, values),
+    onSuccess: async (results) => {
+      const total = results.reduce((sum, item) => sum + item.extracted_trackings.length, 0);
+      setExtractResults(results);
+      setExtractModalOpen(false);
+      setExtractResultModalOpen(true);
+      extractForm.resetFields();
+      await queryClient.invalidateQueries({ queryKey: ['tracking', id] });
+
+      if (total > 0) {
+        message.success(`已新增 ${total} 条追踪记录`);
+      } else {
+        message.info('本次未提取到可保存的追踪记录');
+      }
+    },
+    onError: (error: unknown) => {
+      const errorMessage = error instanceof Error ? error.message : '提取失败';
+      message.error('提取失败：' + errorMessage);
     },
   });
 
@@ -269,13 +314,33 @@ export default function TrackingList() {
           <div className="header-title">状态追踪</div>
         </div>
         <div className="header-right">
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={handleCreate}
-          >
-            新建追踪
-          </Button>
+          <Space wrap>
+            <Button
+              icon={<RobotOutlined />}
+              onClick={() => {
+                extractForm.setFieldsValue({
+                  chapter_ids: [],
+                  tracking_types: [
+                    TrackingType.CHARACTER_STATE,
+                    TrackingType.FORESHADOWING,
+                    TrackingType.ITEM,
+                    TrackingType.TIMELINE,
+                  ],
+                });
+                setExtractModalOpen(true);
+              }}
+              disabled={!chaptersData?.items?.length}
+            >
+              从章节自动提取
+            </Button>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={handleCreate}
+            >
+              新建追踪
+            </Button>
+          </Space>
         </div>
       </Header>
 
@@ -372,6 +437,93 @@ export default function TrackingList() {
         tracking={selectedTracking || undefined}
         onSuccess={handleFormSuccess}
       />
+
+      <Modal
+        title="从章节自动提取追踪"
+        open={extractModalOpen}
+        onCancel={() => setExtractModalOpen(false)}
+        onOk={() => extractForm.submit()}
+        confirmLoading={extractMutation.isPending}
+        okText="开始提取"
+        cancelText="取消"
+      >
+        <Form
+          form={extractForm}
+          layout="vertical"
+          onFinish={extractMutation.mutate}
+        >
+          <Form.Item
+            name="chapter_ids"
+            label="选择章节"
+            rules={[{ required: true, message: '请至少选择一个章节' }]}
+          >
+            <Select
+              mode="multiple"
+              placeholder="选择要分析的章节"
+              options={(chaptersData?.items || []).map((chapter) => ({
+                label: `第${chapter.chapter_number}章 · ${chapter.title || '无标题'}`,
+                value: chapter.id,
+              }))}
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="tracking_types"
+            label="提取类型"
+          >
+            <Select
+              mode="multiple"
+              placeholder="选择要提取的追踪类型"
+              options={Object.entries(trackingTypeConfig).map(([value, config]) => ({
+                label: config.label,
+                value,
+              }))}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="提取结果摘要"
+        open={extractResultModalOpen}
+        onCancel={() => setExtractResultModalOpen(false)}
+        footer={[
+          <Button key="close" type="primary" onClick={() => setExtractResultModalOpen(false)}>
+            关闭
+          </Button>,
+        ]}
+      >
+        {extractResults.length === 0 ? (
+          <Empty description="暂无提取结果" />
+        ) : (
+          <List
+            className="extract-result-list"
+            dataSource={extractResults}
+            renderItem={(result) => (
+              <List.Item className="extract-result-item">
+                <div className="extract-result-summary">
+                  <Space wrap>
+                    <Text strong>{result.chapter_title || '未命名章节'}</Text>
+                    <Tag color="blue">{result.extracted_trackings.length} 条新增</Tag>
+                  </Space>
+                  {result.extracted_trackings.length > 0 ? (
+                    <div className="extract-result-tags">
+                      {result.extracted_trackings.map((tracking, index) => (
+                        <Tag key={`${result.chapter_id}-${index}`}>
+                          {(trackingTypeConfig[tracking.tracking_type]?.label || tracking.tracking_type)}
+                          {tracking.entity_id ? ` · ${tracking.entity_id}` : ''}
+                        </Tag>
+                      ))}
+                    </div>
+                  ) : (
+                    <Text type="secondary">该章节未提取到新记录</Text>
+                  )}
+                </div>
+              </List.Item>
+            )}
+          />
+        )}
+      </Modal>
     </Layout>
   );
 }

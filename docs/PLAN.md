@@ -244,6 +244,7 @@
 - 已完成 AUDIT-007：编辑器已支持查看本章大纲和章节内匹配角色，并在版本历史中提供双栏段落级“对比当前版本”视图。
 - 已完成 AUDIT-008：编辑器工具栏已接入 AI 改写与 AI 扩写，支持感知当前选区并将返回结果直接替换选中文本。
 - 已完成 AUDIT-009：大纲管理页已接入 AI 生成大纲与章节细纲拆解，同时补齐单元大纲的主线父级选择数据。
+- 已完成 AUDIT-010：状态追踪自动提取已形成完整闭环，后端保存项目归属与类型过滤已修复，前端新增章节提取入口和结果摘要。
 - 本轮验证结果：
   1. `frontend: npm run build` 通过
   2. `backend: python3 -m compileall backend` 通过
@@ -253,3 +254,5 @@
   6. `frontend: npm run build` 在 AUDIT-007 完成后再次通过
   7. `frontend: npm run build` 在 AUDIT-008 完成后再次通过
   8. `frontend: npm run build` 在 AUDIT-009 完成后再次通过
+  9. `frontend: npm run build` 在 AUDIT-010 完成后再次通过
+  10. `backend: python3 -m compileall backend` 在 AUDIT-010 完成后再次通过

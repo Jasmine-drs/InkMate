@@ -106,6 +106,27 @@
   border: 1px solid var(--color-border);
 }
 
+.extract-result-list {
+  margin-top: 8px;
+}
+
+.extract-result-item {
+  align-items: flex-start !important;
+}
+
+.extract-result-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.extract-result-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
   .tracking-header {
