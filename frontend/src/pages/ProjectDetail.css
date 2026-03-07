@@ -345,6 +345,139 @@
   font-size: 14px !important;
 }
 
+.overview-card {
+  background: var(--bg-secondary) !important;
+  border: 1px solid var(--border-primary) !important;
+  border-radius: var(--radius-lg) !important;
+}
+
+.overview-card .ant-card-body {
+  padding: 0 !important;
+}
+
+.overview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-primary);
+  background: rgba(26, 42, 74, 0.3);
+}
+
+.overview-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.overview-title-group .ant-typography {
+  margin: 0 !important;
+  color: var(--text-primary) !important;
+}
+
+.overview-header .ant-btn-link {
+  color: var(--orange-400) !important;
+  padding-inline: 0 !important;
+}
+
+.overview-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.overview-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.overview-item:last-child {
+  border-bottom: none;
+}
+
+.overview-main {
+  min-width: 0;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.overview-item-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.overview-item-header .ant-typography {
+  color: var(--text-primary) !important;
+}
+
+.overview-item-header .ant-tag {
+  margin-inline-end: 0 !important;
+}
+
+.overview-description {
+  color: var(--text-tertiary) !important;
+  line-height: 1.7 !important;
+}
+
+.overview-state,
+.overview-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.overview-empty .ant-typography {
+  color: var(--text-secondary) !important;
+}
+
+.overview-empty .ant-typography:last-of-type {
+  color: var(--text-tertiary) !important;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  padding: 24px;
+}
+
+.setting-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 18px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(230, 126, 34, 0.15);
+  background: rgba(20, 33, 54, 0.45);
+}
+
+.setting-label {
+  color: var(--orange-400) !important;
+  font-size: 12px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.setting-value {
+  color: var(--text-secondary) !important;
+  line-height: 1.7 !important;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 /* 创建按钮 */
 .create-chapter-btn,
 .create-character-btn,
@@ -449,6 +582,25 @@
     width: 72px;
     height: 72px;
     font-size: 28px;
+  }
+
+  .overview-header,
+  .overview-item {
+    padding: 16px;
+  }
+
+  .overview-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .overview-item {
+    flex-direction: column;
+  }
+
+  .settings-grid {
+    grid-template-columns: 1fr;
+    padding: 16px;
   }
 }
 

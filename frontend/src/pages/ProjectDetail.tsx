@@ -2,7 +2,7 @@
  * 项目详情页 - 重构版
  * 墨蓝色主题 + 玻璃态卡片
  */
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Layout, Typography, Spin, Card, Button, Tabs, Tag, Table, Space, Popconfirm, App, Dropdown } from 'antd';
@@ -15,7 +15,6 @@ import {
   SettingOutlined,
   FireOutlined,
   BookOutlined,
-  TeamOutlined,
   FolderOutlined,
   EditOutlined,
   DeleteOutlined,
@@ -30,6 +29,10 @@ import {
 } from '@ant-design/icons';
 import { getProject } from '@/services/project';
 import { getChapterList, deleteChapter, updateChapterStatus, type ChapterData } from '@/services/chapter';
+import { getCharacterList, type CharacterData } from '@/services/character';
+import { getOutlineList, type OutlineData } from '@/services/outline';
+import { getUnitList, type UnitData } from '@/services/unit';
+import { getTrackingList, type TrackingData } from '@/services/tracking';
 import { exportToTxt, exportToEpub, exportToDocx, triggerDownload } from '@/services/export';
 import { ROUTES } from '@/pages/SettingsEditor';
 import './ProjectDetail.css';
@@ -57,6 +60,122 @@ const statusLabels: Record<string, { label: string; color: string }> = {
   finalized: { label: '定稿', color: 'green' },
 };
 
+const outlineTypeLabels: Record<string, string> = {
+  main: '主线大纲',
+  unit: '单元大纲',
+  chapter: '章节细纲',
+};
+
+const trackingTypeLabels: Record<string, string> = {
+  character_state: '角色状态',
+  foreshadowing: '伏笔',
+  item: '物品',
+  timeline: '时间线',
+  unit_progress: '单元进度',
+};
+
+const settingLabels: Record<string, string> = {
+  worldView: '世界观',
+  timeSetting: '时代设定',
+  locationSetting: '地点设定',
+  powerSystem: '力量体系',
+  magic: '魔法设定',
+  socialStructure: '社会结构',
+  technology: '科技水平',
+  culture: '文化习俗',
+  history: '历史背景',
+  creatures: '生物种族',
+  other: '其他设定',
+};
+
+interface OverviewCardProps {
+  title: string;
+  count: number;
+  actionText: string;
+  onAction: () => void;
+  emptyTitle: string;
+  emptyText: string;
+  loading: boolean;
+  hasError: boolean;
+  children: ReactNode;
+}
+
+function stripHtml(input?: string): string {
+  if (!input) return '';
+  return input.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function formatPreviewText(input?: string, maxLength = 80): string {
+  const text = stripHtml(input);
+  if (!text) return '暂无内容';
+  return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
+}
+
+function formatSettingValue(value: unknown): string {
+  if (Array.isArray(value)) {
+    return value.join('、');
+  }
+  if (typeof value === 'object' && value !== null) {
+    return JSON.stringify(value);
+  }
+  return String(value ?? '');
+}
+
+function formatTrackingSummary(data?: Record<string, unknown>): string {
+  if (!data) return '暂无状态摘要';
+  const summary = Object.entries(data)
+    .slice(0, 2)
+    .map(([key, value]) => `${key}: ${String(value)}`)
+    .join('，');
+  return summary || '暂无状态摘要';
+}
+
+function OverviewCard({
+  title,
+  count,
+  actionText,
+  onAction,
+  emptyTitle,
+  emptyText,
+  loading,
+  hasError,
+  children,
+}: OverviewCardProps) {
+  return (
+    <Card className="overview-card glass">
+      <div className="overview-header">
+        <div className="overview-title-group">
+          <Title level={5}>{title}</Title>
+          <Tag color="blue">{count}</Tag>
+        </div>
+        <Button type="link" onClick={onAction}>
+          {actionText}
+        </Button>
+      </div>
+
+      {loading ? (
+        <div className="overview-state">
+          <Spin />
+        </div>
+      ) : hasError ? (
+        <div className="overview-state">
+          <Text type="danger">加载失败，请稍后重试</Text>
+        </div>
+      ) : count === 0 ? (
+        <div className="overview-empty">
+          <Title level={5}>{emptyTitle}</Title>
+          <Text>{emptyText}</Text>
+          <Button type="primary" onClick={onAction}>
+            {actionText}
+          </Button>
+        </div>
+      ) : (
+        children
+      )}
+    </Card>
+  );
+}
+
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -76,6 +195,30 @@ export default function ProjectDetail() {
   const { data: chaptersData, isLoading: chaptersLoading } = useQuery({
     queryKey: ['chapters', id],
     queryFn: () => getChapterList(id!, 1, 100),
+    enabled: !!id,
+  });
+
+  const { data: charactersData, isLoading: charactersLoading, error: charactersError } = useQuery({
+    queryKey: ['characters', id, 'overview'],
+    queryFn: () => getCharacterList(id!, 1, 6),
+    enabled: !!id,
+  });
+
+  const { data: outlinesData, isLoading: outlinesLoading, error: outlinesError } = useQuery({
+    queryKey: ['outlines', id, 'overview'],
+    queryFn: () => getOutlineList(id!, undefined, null, 1, 6),
+    enabled: !!id,
+  });
+
+  const { data: unitsData, isLoading: unitsLoading, error: unitsError } = useQuery({
+    queryKey: ['units', id, 'overview'],
+    queryFn: () => getUnitList(id!, 1, 6),
+    enabled: !!id,
+  });
+
+  const { data: trackingData, isLoading: trackingLoading, error: trackingError } = useQuery({
+    queryKey: ['tracking', id, 'overview'],
+    queryFn: () => getTrackingList(id!, { page: 1, page_size: 6 }),
     enabled: !!id,
   });
 
@@ -262,6 +405,10 @@ export default function ProjectDetail() {
   ];
 
   const chapters = chaptersData?.items || [];
+  const characters = charactersData?.items || [];
+  const outlines = outlinesData?.items || [];
+  const units = unitsData?.items || [];
+  const trackings = trackingData?.items || [];
 
   if (projectLoading) {
     return (
@@ -290,6 +437,22 @@ export default function ProjectDetail() {
       </Layout>
     );
   }
+
+  const settingEntries = Object.entries(project.settings || {})
+    .filter(([, value]) => {
+      if (typeof value === 'string') {
+        return value.trim().length > 0;
+      }
+      if (Array.isArray(value)) {
+        return value.length > 0;
+      }
+      return value !== null && value !== undefined && String(value).trim().length > 0;
+    })
+    .map(([key, value]) => ({
+      key,
+      label: settingLabels[key] || key,
+      value: formatSettingValue(value),
+    }));
 
   return (
     <Layout className="project-detail-layout">
@@ -421,20 +584,39 @@ export default function ProjectDetail() {
                 ),
                 children: (
                   <div className="tab-content">
-                    <div className="empty-module">
-                      <div className="module-icon characters">
-                        <TeamOutlined />
+                    <OverviewCard
+                      title="角色概览"
+                      count={charactersData?.total || characters.length}
+                      actionText="查看全部角色"
+                      onAction={() => navigate(`/project/${id}/characters`)}
+                      emptyTitle="暂无角色"
+                      emptyText="创建角色卡片后，这里会展示最近维护的人物设定。"
+                      loading={charactersLoading}
+                      hasError={!!charactersError}
+                    >
+                      <div className="overview-list">
+                        {characters.map((character: CharacterData) => (
+                          <div key={character.id} className="overview-item">
+                            <div className="overview-main">
+                              <div className="overview-item-header">
+                                <Text strong>{character.name}</Text>
+                                {character.role_type && <Tag>{character.role_type}</Tag>}
+                              </div>
+                              <Text className="overview-description">
+                                {formatPreviewText(
+                                  (character.card_data?.brief as string | undefined) ||
+                                  (character.card_data?.description as string | undefined),
+                                  70
+                                )}
+                              </Text>
+                            </div>
+                            <Button type="link" onClick={() => navigate(`/project/${id}/character/${character.id}`)}>
+                              查看
+                            </Button>
+                          </div>
+                        ))}
                       </div>
-                      <Title level={5}>暂无角色</Title>
-                      <Text className="module-text">创建你的角色卡片，记录人物设定</Text>
-                      <Button
-                        type="primary"
-                        className="create-character-btn"
-                        onClick={() => navigate(`/project/${id}/characters`)}
-                      >
-                        <UserOutlined /> 管理角色
-                      </Button>
-                    </div>
+                    </OverviewCard>
                   </div>
                 ),
               },
@@ -448,20 +630,25 @@ export default function ProjectDetail() {
                 ),
                 children: (
                   <div className="tab-content">
-                    <div className="empty-module">
-                      <div className="module-icon settings">
-                        <SettingOutlined />
+                    <OverviewCard
+                      title="设定概览"
+                      count={settingEntries.length}
+                      actionText="编辑世界观设定"
+                      onAction={() => id && navigate(ROUTES.SETTINGS_EDITOR(id))}
+                      emptyTitle="暂无设定"
+                      emptyText="项目设定会在这里展示已填写的世界观字段。"
+                      loading={false}
+                      hasError={false}
+                    >
+                      <div className="settings-grid">
+                        {settingEntries.map((entry) => (
+                          <div key={entry.key} className="setting-card">
+                            <Text className="setting-label">{entry.label}</Text>
+                            <Text className="setting-value">{entry.value}</Text>
+                          </div>
+                        ))}
                       </div>
-                      <Title level={5}>暂无设定</Title>
-                      <Text className="module-text">构建你的世界观，让故事更加丰富</Text>
-                      <Button
-                        type="primary"
-                        className="create-setting-btn"
-                        onClick={() => id && navigate(ROUTES.SETTINGS_EDITOR(id))}
-                      >
-                        <SettingOutlined /> 编辑世界观设定
-                      </Button>
-                    </div>
+                    </OverviewCard>
                   </div>
                 ),
               },
@@ -475,20 +662,39 @@ export default function ProjectDetail() {
                 ),
                 children: (
                   <div className="tab-content">
-                    <div className="empty-module">
-                      <div className="module-icon outlines">
-                        <BookOutlined />
+                    <OverviewCard
+                      title="大纲概览"
+                      count={outlinesData?.total || outlines.length}
+                      actionText="查看全部大纲"
+                      onAction={() => navigate(`/project/${id}/outlines`)}
+                      emptyTitle="暂无大纲"
+                      emptyText="主线大纲、单元大纲和章节细纲会集中预览在这里。"
+                      loading={outlinesLoading}
+                      hasError={!!outlinesError}
+                    >
+                      <div className="overview-list">
+                        {outlines.map((outline: OutlineData) => (
+                          <div key={outline.id} className="overview-item">
+                            <div className="overview-main">
+                              <div className="overview-item-header">
+                                <Text strong>
+                                  {outline.outline_type === 'chapter'
+                                    ? `第${outline.chapter_number || '?'}章细纲`
+                                    : outlineTypeLabels[outline.outline_type] || '大纲'}
+                                </Text>
+                                <Tag>{outlineTypeLabels[outline.outline_type] || outline.outline_type}</Tag>
+                              </div>
+                              <Text className="overview-description">
+                                {formatPreviewText(outline.content)}
+                              </Text>
+                            </div>
+                            <Button type="link" onClick={() => navigate(`/project/${id}/outline/${outline.id}`)}>
+                              查看
+                            </Button>
+                          </div>
+                        ))}
                       </div>
-                      <Title level={5}>暂无大纲</Title>
-                      <Text className="module-text">创建故事大纲，规划剧情发展</Text>
-                      <Button
-                        type="primary"
-                        className="create-outline-btn"
-                        onClick={() => navigate(`/project/${id}/outlines`)}
-                      >
-                        <BookOutlined /> 管理大纲
-                      </Button>
-                    </div>
+                    </OverviewCard>
                   </div>
                 ),
               },
@@ -502,20 +708,39 @@ export default function ProjectDetail() {
                 ),
                 children: (
                   <div className="tab-content">
-                    <div className="empty-module">
-                      <div className="module-icon units">
-                        <FolderOutlined />
+                    <OverviewCard
+                      title="单元概览"
+                      count={unitsData?.total || units.length}
+                      actionText="查看全部单元"
+                      onAction={() => navigate(`/project/${id}/units`)}
+                      emptyTitle="暂无单元"
+                      emptyText="创建单元后，这里会显示章节范围和概要。"
+                      loading={unitsLoading}
+                      hasError={!!unitsError}
+                    >
+                      <div className="overview-list">
+                        {units.map((unit: UnitData) => (
+                          <div key={unit.id} className="overview-item">
+                            <div className="overview-main">
+                              <div className="overview-item-header">
+                                <Text strong>{`单元${unit.unit_number}${unit.title ? ` · ${unit.title}` : ''}`}</Text>
+                                {unit.status && <Tag>{unit.status}</Tag>}
+                              </div>
+                              <Text className="overview-description">
+                                {unit.start_chapter && unit.end_chapter
+                                  ? `章节范围：第${unit.start_chapter}章 - 第${unit.end_chapter}章`
+                                  : formatPreviewText(
+                                      (unit.outline as Record<string, unknown> | undefined)?.brief as string | undefined
+                                    )}
+                              </Text>
+                            </div>
+                            <Button type="link" onClick={() => navigate(`/project/${id}/unit/${unit.id}`)}>
+                              查看
+                            </Button>
+                          </div>
+                        ))}
                       </div>
-                      <Title level={5}>暂无单元</Title>
-                      <Text className="module-text">创建单元结构，组织章节内容</Text>
-                      <Button
-                        type="primary"
-                        className="create-unit-btn"
-                        onClick={() => navigate(`/project/${id}/units`)}
-                      >
-                        <FolderOutlined /> 管理单元
-                      </Button>
-                    </div>
+                    </OverviewCard>
                   </div>
                 ),
               },
@@ -529,20 +754,37 @@ export default function ProjectDetail() {
                 ),
                 children: (
                   <div className="tab-content">
-                    <div className="empty-module">
-                      <div className="module-icon tracking">
-                        <LineChartOutlined />
+                    <OverviewCard
+                      title="追踪概览"
+                      count={trackingData?.total || trackings.length}
+                      actionText="查看全部追踪"
+                      onAction={() => navigate(`/project/${id}/tracking`)}
+                      emptyTitle="暂无追踪记录"
+                      emptyText="角色状态、伏笔、物品和时间线的最新记录会显示在这里。"
+                      loading={trackingLoading}
+                      hasError={!!trackingError}
+                    >
+                      <div className="overview-list">
+                        {trackings.map((tracking: TrackingData) => (
+                          <div key={tracking.id} className="overview-item">
+                            <div className="overview-main">
+                              <div className="overview-item-header">
+                                <Text strong>{tracking.entity_id || '未命名实体'}</Text>
+                                <Tag>{trackingTypeLabels[tracking.tracking_type] || tracking.tracking_type}</Tag>
+                              </div>
+                              <Text className="overview-description">
+                                {tracking.chapter_number
+                                  ? `第${tracking.chapter_number}章 · ${formatTrackingSummary(tracking.state_data)}`
+                                  : formatTrackingSummary(tracking.state_data)}
+                              </Text>
+                            </div>
+                            <Button type="link" onClick={() => navigate(`/project/${id}/tracking`)}>
+                              查看
+                            </Button>
+                          </div>
+                        ))}
                       </div>
-                      <Title level={5}>暂无追踪记录</Title>
-                      <Text className="module-text">追踪角色状态、伏笔、物品和时间线</Text>
-                      <Button
-                        type="primary"
-                        className="create-tracking-btn"
-                        onClick={() => navigate(`/project/${id}/tracking`)}
-                      >
-                        <LineChartOutlined /> 管理追踪
-                      </Button>
-                    </div>
+                    </OverviewCard>
                   </div>
                 ),
               },
