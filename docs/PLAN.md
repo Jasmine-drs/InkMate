@@ -242,6 +242,7 @@
 - 同链路低风险补洞已一并处理：清理了 `export.py` 的重复路由定义，并让非流式 chat 也复用同一套项目/章节校验。
 - 已完成 AUDIT-006：项目详情页已改为真实概览页，角色/设定/大纲/单元/追踪 5 个 Tab 均接入真实数据预览与查看全部入口。
 - 已完成 AUDIT-007：编辑器已支持查看本章大纲和章节内匹配角色，并在版本历史中提供双栏段落级“对比当前版本”视图。
+- 已完成 AUDIT-008：编辑器工具栏已接入 AI 改写与 AI 扩写，支持感知当前选区并将返回结果直接替换选中文本。
 - 本轮验证结果：
   1. `frontend: npm run build` 通过
   2. `backend: python3 -m compileall backend` 通过
@@ -249,3 +250,4 @@
   4. 由于本机缺少可直接激活的后端 conda 环境，未完成 FastAPI 运行态路由枚举验证
   5. `frontend: npm run build` 在 AUDIT-006 完成后再次通过
   6. `frontend: npm run build` 在 AUDIT-007 完成后再次通过
+  7. `frontend: npm run build` 在 AUDIT-008 完成后再次通过

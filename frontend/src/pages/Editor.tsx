@@ -26,7 +26,8 @@ import {
   FileSyncOutlined,
   MessageOutlined,
 } from '@ant-design/icons';
-import { RichTextEditor, insertTokenToEditor, finishEditorStreaming } from '@/components/RichTextEditor';
+import { RichTextEditor, insertTokenToEditor, finishEditorStreaming, type EditorSelectionApi } from '@/components/RichTextEditor';
+import { AIActionModal } from '@/components/AIActionModal';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { updateChapter, getChapterById, createChapter, getNextChapterNumber } from '@/services/chapter';
 import { getOutlineList, type OutlineData } from '@/services/outline';
@@ -34,7 +35,7 @@ import { getCharacterList, type CharacterData } from '@/services/character';
 import { getProject } from '@/services/project';
 import VersionHistoryModal from '@/components/VersionHistoryModal';
 import AIChatModal from '@/components/AIChatModal';
-import { continueWritingStream, type ContinueWritingOptions, StreamingError } from '@/services/ai';
+import { continueWritingStream, rewrite, expand, type ContinueWritingOptions, StreamingError } from '@/services/ai';
 import './Editor.css';
 
 const { Header, Content, Sider } = Layout;
@@ -61,12 +62,16 @@ export default function Editor() {
   const [isAIGenerating, setIsAIGenerating] = useState(false);
   const [projectSettings, setProjectSettings] = useState<Record<string, unknown> | undefined>(undefined);
   const [chatModalVisible, setChatModalVisible] = useState(false);
+  const [selectedText, setSelectedText] = useState('');
+  const [aiActionVisible, setAiActionVisible] = useState(false);
+  const [aiActionType, setAiActionType] = useState<'rewrite' | 'expand'>('rewrite');
   const [outlineDrawerVisible, setOutlineDrawerVisible] = useState(false);
   const [characterDrawerVisible, setCharacterDrawerVisible] = useState(false);
   const [outlineLoading, setOutlineLoading] = useState(false);
   const [characterLoading, setCharacterLoading] = useState(false);
   const [currentChapterOutline, setCurrentChapterOutline] = useState<OutlineData | null>(null);
   const [matchedCharacters, setMatchedCharacters] = useState<CharacterData[]>([]);
+  const editorSelectionApiRef = useRef<EditorSelectionApi | null>(null);
 
   // 加载项目设定
   useEffect(() => {
@@ -257,6 +262,47 @@ export default function Editor() {
       }
     } finally {
       setIsAIGenerating(false);
+    }
+  };
+
+  const openAIActionModal = (action: 'rewrite' | 'expand') => {
+    const selection = editorSelectionApiRef.current?.getSelectedText() || selectedText;
+    if (!selection.trim()) {
+      message.warning('请先选中需要处理的文本');
+      return;
+    }
+
+    setSelectedText(selection);
+    setAiActionType(action);
+    setAiActionVisible(true);
+  };
+
+  const handleAIActionConfirm = async (instruction: string) => {
+    const currentSelection = editorSelectionApiRef.current?.getSelectedText() || selectedText;
+    if (!currentSelection.trim()) {
+      throw new Error('请先选中需要处理的文本');
+    }
+
+    const hide = message.loading(aiActionType === 'rewrite' ? 'AI 正在改写...' : 'AI 正在扩写...', 0);
+
+    try {
+      const response = aiActionType === 'rewrite'
+        ? await rewrite({
+            content: currentSelection,
+            instruction,
+          })
+        : await expand({
+            content: currentSelection,
+            direction: instruction,
+          });
+
+      editorSelectionApiRef.current?.replaceSelection(response.content);
+      setSelectedText('');
+      message.success(aiActionType === 'rewrite' ? '改写完成' : '扩写完成');
+    } catch (error: unknown) {
+      throw new Error(error instanceof Error ? error.message : 'AI 处理失败');
+    } finally {
+      hide();
     }
   };
 
@@ -470,6 +516,12 @@ export default function Editor() {
               onChange={setContent}
               onSave={handleSaveNow}
               onAIContinue={handleAIContinue}
+              onAIRewrite={() => openAIActionModal('rewrite')}
+              onAIExpand={() => openAIActionModal('expand')}
+              onSelectionChange={setSelectedText}
+              onEditorReady={(api) => {
+                editorSelectionApiRef.current = api;
+              }}
               projectId={projectId}
             />
           </div>
@@ -570,6 +622,14 @@ export default function Editor() {
           content: content,
           settings: projectSettings as Record<string, string> | undefined,
         }}
+      />
+
+      <AIActionModal
+        visible={aiActionVisible}
+        selectedText={selectedText}
+        action={aiActionType}
+        onClose={() => setAiActionVisible(false)}
+        onConfirm={handleAIActionConfirm}
       />
 
       <Drawer

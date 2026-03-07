@@ -15,17 +15,33 @@ import {
   BlockOutlined,
   RobotOutlined,
   SaveOutlined,
+  EditOutlined,
+  ExpandOutlined,
 } from '@ant-design/icons';
 
 interface ToolbarProps {
   editor: Editor;
   onSave: () => void;
   onAIContinue: () => void;
+  onAIRewrite: () => void;
+  onAIExpand: () => void;
+  selectedText?: string;
   isEmpty?: boolean;
   projectId?: string;
 }
 
-export function Toolbar({ editor, onSave, onAIContinue, isEmpty = false, projectId }: ToolbarProps) {
+export function Toolbar({
+  editor,
+  onSave,
+  onAIContinue,
+  onAIRewrite,
+  onAIExpand,
+  selectedText = '',
+  isEmpty = false,
+  projectId,
+}: ToolbarProps) {
+  const hasSelection = selectedText.trim().length > 0;
+
   return (
     <div className="editor-toolbar">
       <Space size="small" wrap>
@@ -158,6 +174,28 @@ export function Toolbar({ editor, onSave, onAIContinue, isEmpty = false, project
             className="ai-btn"
           >
             AI 续写
+          </Button>
+        </Tooltip>
+
+        <Tooltip title={hasSelection ? 'AI 改写选中文本' : '请先选中文本'}>
+          <Button
+            size="small"
+            icon={<EditOutlined />}
+            onClick={onAIRewrite}
+            disabled={!hasSelection}
+          >
+            AI 改写
+          </Button>
+        </Tooltip>
+
+        <Tooltip title={hasSelection ? 'AI 扩写选中文本' : '请先选中文本'}>
+          <Button
+            size="small"
+            icon={<ExpandOutlined />}
+            onClick={onAIExpand}
+            disabled={!hasSelection}
+          >
+            AI 扩写
           </Button>
         </Tooltip>
 

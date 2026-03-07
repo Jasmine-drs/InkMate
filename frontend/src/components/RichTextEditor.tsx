@@ -9,11 +9,20 @@ import { useEffect, useRef, useCallback } from 'react';
 import { Toolbar } from './Toolbar';
 import '../pages/Editor.css';
 
+export interface EditorSelectionApi {
+  getSelectedText: () => string;
+  replaceSelection: (text: string) => void;
+}
+
 interface RichTextEditorProps {
   content: string;
   onChange: (content: string) => void;
   onSave: () => void;
   onAIContinue: () => void;
+  onAIRewrite: () => void;
+  onAIExpand: () => void;
+  onSelectionChange?: (selectedText: string) => void;
+  onEditorReady?: (api: EditorSelectionApi) => void;
   projectId?: string;
 }
 
@@ -39,7 +48,17 @@ function normalizeContent(content: string): string {
   return `<p>${content}</p>`;
 }
 
-export function RichTextEditor({ content, onChange, onSave, onAIContinue, projectId }: RichTextEditorProps) {
+export function RichTextEditor({
+  content,
+  onChange,
+  onSave,
+  onAIContinue,
+  onAIRewrite,
+  onAIExpand,
+  onSelectionChange,
+  onEditorReady,
+  projectId,
+}: RichTextEditorProps) {
   const isStreamingRef = useRef(false);
   const lastContentRef = useRef(content);
 
@@ -159,6 +178,41 @@ export function RichTextEditor({ content, onChange, onSave, onAIContinue, projec
     }
   }, [content, editor, insertStreamingToken]);
 
+  useEffect(() => {
+    if (!editor) return;
+
+    const emitSelection = () => {
+      const { from, to } = editor.state.selection;
+      const selectedText = editor.state.doc.textBetween(from, to, ' ').trim();
+      onSelectionChange?.(selectedText);
+    };
+
+    emitSelection();
+    editor.on('selectionUpdate', emitSelection);
+
+    return () => {
+      editor.off('selectionUpdate', emitSelection);
+    };
+  }, [editor, onSelectionChange]);
+
+  useEffect(() => {
+    if (!editor || !onEditorReady) return;
+
+    onEditorReady({
+      getSelectedText: () => {
+        const { from, to } = editor.state.selection;
+        return editor.state.doc.textBetween(from, to, ' ').trim();
+      },
+      replaceSelection: (text: string) => {
+        editor.chain().focus().insertContent(text).run();
+        const newHtml = editor.getHTML();
+        lastContentRef.current = newHtml;
+        onChange(newHtml);
+        onSelectionChange?.('');
+      },
+    });
+  }, [editor, onChange, onEditorReady, onSelectionChange]);
+
   // 暴露流式插入方法给父组件
   useEffect(() => {
     if (editor) {
@@ -182,7 +236,16 @@ export function RichTextEditor({ content, onChange, onSave, onAIContinue, projec
 
   return (
     <div className="rich-text-editor">
-      <Toolbar editor={editor} onSave={onSave} onAIContinue={onAIContinue} isEmpty={isEmpty} projectId={projectId} />
+      <Toolbar
+        editor={editor}
+        onSave={onSave}
+        onAIContinue={onAIContinue}
+        onAIRewrite={onAIRewrite}
+        onAIExpand={onAIExpand}
+        isEmpty={isEmpty}
+        selectedText={editor.state.doc.textBetween(editor.state.selection.from, editor.state.selection.to, ' ').trim()}
+        projectId={projectId}
+      />
       <EditorContent editor={editor} className="editor-content" />
     </div>
   );
