@@ -30,6 +30,24 @@ export interface UpdateOutlineParams {
   sort_order?: number;
 }
 
+export interface OutlineGenerateRequest {
+  theme: string;
+  description: string;
+  world_view?: string;
+  outline_type: string;
+  unit_id?: string | null;
+}
+
+export interface OutlineBreakdownRequest {
+  outline_id: string;
+  chapter_count: number;
+}
+
+export interface OutlineBreakdownResponse {
+  chapters: OutlineData[];
+  count: number;
+}
+
 /**
  * 创建大纲
  */
@@ -92,4 +110,24 @@ export const deleteOutline = async (
   outlineId: string
 ): Promise<void> => {
   return api.delete(`/projects/${projectId}/outlines/${outlineId}`);
+};
+
+/**
+ * AI 生成大纲
+ */
+export const generateOutline = async (
+  projectId: string,
+  data: OutlineGenerateRequest
+): Promise<OutlineData> => {
+  return api.post(`/projects/${projectId}/outlines/generate`, data);
+};
+
+/**
+ * 拆解章节细纲
+ */
+export const breakdownOutline = async (
+  projectId: string,
+  data: OutlineBreakdownRequest
+): Promise<OutlineBreakdownResponse> => {
+  return api.post(`/projects/${projectId}/outlines/breakdown`, data);
 };

@@ -22,7 +22,7 @@ import {
   SaveOutlined,
   BookOutlined,
 } from '@ant-design/icons';
-import { getOutline, updateOutline, createOutline } from '@/services/outline';
+import { getOutline, updateOutline, createOutline, getOutlineList } from '@/services/outline';
 import { ROUTES } from '@/pages/SettingsEditor';
 import './OutlineEditor.css';
 
@@ -59,6 +59,12 @@ export default function OutlineEditor() {
     queryKey: ['outline', id, outlineId],
     queryFn: () => getOutline(id!, outlineId!),
     enabled: !isNew && !!id && !!outlineId,
+  });
+
+  const { data: mainOutlinesData } = useQuery({
+    queryKey: ['outlines', id, 'main-options'],
+    queryFn: () => getOutlineList(id!, 'main', null, 1, 100),
+    enabled: !!id,
   });
 
   // 初始化表单
@@ -230,9 +236,16 @@ export default function OutlineEditor() {
                   label="所属主线大纲"
                   tooltip="选择该单元大纲所属的主线大纲"
                 >
-                  <Select placeholder="请选择主线大纲（可选）" allowClear>
-                    {/* TODO: 加载主线大纲列表 */}
-                  </Select>
+                  <Select
+                    placeholder="请选择主线大纲（可选）"
+                    allowClear
+                    options={(mainOutlinesData?.items || []).map((outline) => ({
+                      label: outline.content
+                        ? outline.content.slice(0, 40)
+                        : '未命名主线大纲',
+                      value: outline.id,
+                    }))}
+                  />
                 </Form.Item>
               )}
             </Card>

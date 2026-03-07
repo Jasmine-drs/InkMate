@@ -18,6 +18,10 @@ import {
   App,
   Popconfirm,
   Divider,
+  Modal,
+  Form,
+  Input,
+  InputNumber,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -25,19 +29,37 @@ import {
   EditOutlined,
   DeleteOutlined,
   BookOutlined,
+  RobotOutlined,
+  PartitionOutlined,
 } from '@ant-design/icons';
-import { getOutlineList, deleteOutline } from '@/services/outline';
+import { getOutlineList, deleteOutline, generateOutline, breakdownOutline } from '@/services/outline';
+import { getProject } from '@/services/project';
+import { getUnitList } from '@/services/unit';
 import { ROUTES } from '@/pages/SettingsEditor';
 import './OutlineList.css';
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
+const { TextArea } = Input;
 
 const outlineTypeLabels: Record<string, { text: string; color: string }> = {
   main: { text: '主线大纲', color: 'red' },
   unit: { text: '单元大纲', color: 'blue' },
   chapter: { text: '章节细纲', color: 'green' },
 };
+
+interface GenerateOutlineFormValues {
+  theme: string;
+  description: string;
+  world_view?: string;
+  outline_type: string;
+  unit_id?: string;
+}
+
+interface BreakdownFormValues {
+  outline_id: string;
+  chapter_count: number;
+}
 
 export default function OutlineList() {
   const { message } = App.useApp();
@@ -46,11 +68,28 @@ export default function OutlineList() {
   const queryClient = useQueryClient();
 
   const [typeFilter, setTypeFilter] = useState<string | undefined>(undefined);
+  const [generateModalOpen, setGenerateModalOpen] = useState(false);
+  const [breakdownModalOpen, setBreakdownModalOpen] = useState(false);
+  const [generateForm] = Form.useForm<GenerateOutlineFormValues>();
+  const [breakdownForm] = Form.useForm<BreakdownFormValues>();
+  const generateOutlineType = Form.useWatch('outline_type', generateForm);
+
+  const { data: projectData } = useQuery({
+    queryKey: ['project', id],
+    queryFn: () => getProject(id!),
+    enabled: !!id,
+  });
+
+  const { data: unitsData } = useQuery({
+    queryKey: ['units', id, 'outline-options'],
+    queryFn: () => getUnitList(id!, 1, 100),
+    enabled: !!id,
+  });
 
   // 获取大纲列表
   const { data, isLoading, error } = useQuery({
-    queryKey: ['outlines', id, typeFilter],
-    queryFn: () => getOutlineList(id!, typeFilter, null, 1, 100),
+    queryKey: ['outlines', id, 'all'],
+    queryFn: () => getOutlineList(id!, undefined, null, 1, 100),
     enabled: !!id,
   });
 
@@ -67,9 +106,61 @@ export default function OutlineList() {
     },
   });
 
+  const generateMutation = useMutation({
+    mutationFn: (values: GenerateOutlineFormValues) => generateOutline(id!, values),
+    onSuccess: async (outline) => {
+      await queryClient.invalidateQueries({ queryKey: ['outlines', id] });
+      setGenerateModalOpen(false);
+      generateForm.resetFields();
+      setTypeFilter(outline.outline_type);
+      message.success('AI 大纲已生成');
+      navigate(`/project/${id}/outline/${outline.id}`);
+    },
+    onError: (error: unknown) => {
+      const errorMessage = error instanceof Error ? error.message : 'AI 生成失败';
+      message.error('AI 生成失败：' + errorMessage);
+    },
+  });
+
+  const breakdownMutation = useMutation({
+    mutationFn: (values: BreakdownFormValues) => breakdownOutline(id!, values),
+    onSuccess: async (result) => {
+      await queryClient.invalidateQueries({ queryKey: ['outlines', id] });
+      setBreakdownModalOpen(false);
+      breakdownForm.resetFields();
+      setTypeFilter('chapter');
+      message.success(`已生成 ${result.count} 个章节细纲`);
+    },
+    onError: (error: unknown) => {
+      const errorMessage = error instanceof Error ? error.message : '拆解失败';
+      message.error('拆解失败：' + errorMessage);
+    },
+  });
+
   const filteredItems = typeFilter
     ? data?.items?.filter((item) => item.outline_type === typeFilter)
     : data?.items;
+  const breakdownSourceOptions = (data?.items || []).filter((item) => item.outline_type !== 'chapter');
+
+  const openGenerateModal = () => {
+    const settings = projectData?.settings as Record<string, unknown> | undefined;
+    generateForm.setFieldsValue({
+      theme: projectData?.title || '',
+      description: projectData?.description || '',
+      world_view: (settings?.worldView as string | undefined) || '',
+      outline_type: 'main',
+      unit_id: undefined,
+    });
+    setGenerateModalOpen(true);
+  };
+
+  const openBreakdownModal = () => {
+    breakdownForm.setFieldsValue({
+      outline_id: breakdownSourceOptions[0]?.id,
+      chapter_count: 10,
+    });
+    setBreakdownModalOpen(true);
+  };
 
   if (error) {
     return (
@@ -102,13 +193,28 @@ export default function OutlineList() {
           <Title level={4} className="header-title">大纲管理</Title>
         </div>
         <div className="header-right">
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => navigate(`/project/${id}/outline/new`)}
-          >
-            新建大纲
-          </Button>
+          <Space wrap>
+            <Button
+              icon={<RobotOutlined />}
+              onClick={openGenerateModal}
+            >
+              AI 生成大纲
+            </Button>
+            <Button
+              icon={<PartitionOutlined />}
+              onClick={openBreakdownModal}
+              disabled={breakdownSourceOptions.length === 0}
+            >
+              拆解章节细纲
+            </Button>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => navigate(`/project/${id}/outline/new`)}
+            >
+              新建大纲
+            </Button>
+          </Space>
         </div>
       </Header>
 
@@ -229,6 +335,114 @@ export default function OutlineList() {
           </Card>
         </div>
       </Content>
+
+      <Modal
+        title="AI 生成大纲"
+        open={generateModalOpen}
+        onCancel={() => setGenerateModalOpen(false)}
+        onOk={() => generateForm.submit()}
+        confirmLoading={generateMutation.isPending}
+        okText="开始生成"
+        cancelText="取消"
+      >
+        <Form
+          form={generateForm}
+          layout="vertical"
+          onFinish={generateMutation.mutate}
+        >
+          <Form.Item
+            name="theme"
+            label="主题"
+            rules={[{ required: true, message: '请输入大纲主题' }]}
+          >
+            <Input placeholder="例如：失落王城复苏" />
+          </Form.Item>
+
+          <Form.Item
+            name="description"
+            label="项目简介"
+            rules={[{ required: true, message: '请输入项目简介' }]}
+          >
+            <TextArea rows={4} placeholder="简述故事主线、主要冲突和创作目标" />
+          </Form.Item>
+
+          <Form.Item
+            name="world_view"
+            label="世界观设定"
+          >
+            <TextArea rows={4} placeholder="可选，补充世界观/时代/力量体系等背景" />
+          </Form.Item>
+
+          <Form.Item
+            name="outline_type"
+            label="生成类型"
+            rules={[{ required: true, message: '请选择大纲类型' }]}
+          >
+            <Select
+              options={[
+                { label: '主线大纲', value: 'main' },
+                { label: '单元大纲', value: 'unit' },
+              ]}
+            />
+          </Form.Item>
+
+          {generateOutlineType === 'unit' && (
+            <Form.Item
+              name="unit_id"
+              label="关联单元"
+              rules={[{ required: true, message: '生成单元大纲时请选择单元' }]}
+            >
+              <Select
+                placeholder="请选择单元"
+                options={(unitsData?.items || []).map((unit) => ({
+                  label: `单元${unit.unit_number}${unit.title ? ` · ${unit.title}` : ''}`,
+                  value: unit.id,
+                }))}
+              />
+            </Form.Item>
+          )}
+        </Form>
+      </Modal>
+
+      <Modal
+        title="拆解章节细纲"
+        open={breakdownModalOpen}
+        onCancel={() => setBreakdownModalOpen(false)}
+        onOk={() => breakdownForm.submit()}
+        confirmLoading={breakdownMutation.isPending}
+        okText="开始拆解"
+        cancelText="取消"
+      >
+        <Form
+          form={breakdownForm}
+          layout="vertical"
+          onFinish={breakdownMutation.mutate}
+        >
+          <Form.Item
+            name="outline_id"
+            label="源大纲"
+            rules={[{ required: true, message: '请选择要拆解的大纲' }]}
+          >
+            <Select
+              placeholder="请选择主线或单元大纲"
+              options={breakdownSourceOptions.map((outline) => ({
+                label: outline.outline_type === 'main'
+                  ? '主线大纲'
+                  : `单元大纲${outline.unit_id ? ` · ${outline.unit_id}` : ''}`,
+                value: outline.id,
+              }))}
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="chapter_count"
+            label="章节数量"
+            rules={[{ required: true, message: '请输入章节数量' }]}
+          >
+            <InputNumber min={1} max={50} style={{ width: '100%' }} />
+          </Form.Item>
+        </Form>
+      </Modal>
     </Layout>
   );
 }
