@@ -215,11 +215,11 @@
 
 | ID | 任务 | 优先级 | 状态 | 说明 |
 |----|------|--------|------|------|
-| AUDIT-001 | 修复导出路由前缀错误 | P0 | ⏳ TODO | 当前前端 `/api/export/*` 与后端注册路径不一致 |
-| AUDIT-002 | 修复 tracking 列表接口参数名错误 | P0 | ⏳ TODO | `page_size` 传参与服务层 `limit` 不匹配 |
-| AUDIT-003 | 修复 chat 章节校验调用错误 | P0 | ⏳ TODO | `get_chapter()` 使用了错误签名 |
-| AUDIT-004 | 修复项目更新权限校验顺序 | P0 | ⏳ TODO | 目前先更新再鉴权，存在安全风险 |
-| AUDIT-005 | 修复 AIChatModal 消息落库与停止生成 | P0 | ⏳ TODO | 当前流式完成闭包和 abort 链路都有问题 |
+| AUDIT-001 | 修复导出路由前缀错误 | P0 | ✅ DONE | 已统一为 `/api/export/*`，并清理重复导出路由定义 |
+| AUDIT-002 | 修复 tracking 列表接口参数名错误 | P0 | ✅ DONE | 已将路由层传参从 `page_size` 改为 `limit` |
+| AUDIT-003 | 修复 chat 章节校验调用错误 | P0 | ✅ DONE | 已改为按 `chapter_id` 走 `get_chapter_by_id()` |
+| AUDIT-004 | 修复项目更新权限校验顺序 | P0 | ✅ DONE | 已改为先查项目、先鉴权、后更新 |
+| AUDIT-005 | 修复 AIChatModal 消息落库与停止生成 | P0 | ✅ DONE | 已打通 `AbortSignal` 并修复流式响应落消息列表 |
 | AUDIT-006 | 项目详情页 5 个 Tab 改为真实概览 | P1 | ⏳ TODO | 角色/设定/大纲/单元/追踪当前均为静态占位 |
 | AUDIT-007 | 实现编辑器快捷入口与版本对比 | P1 | ⏳ TODO | “查看本章大纲/角色”与“对比当前版本”仍未实现 |
 | AUDIT-008 | 接入 AI 改写/扩写 UI | P1 | ⏳ TODO | 后端和弹窗组件已存在，但编辑器未接入 |

@@ -52,6 +52,7 @@ export default function AIChatModal({
   const [currentResponse, setCurrentResponse] = useState('');
 
   const abortControllerRef = useRef<AbortController | null>(null);
+  const streamingResponseRef = useRef('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // 自动滚动到底部
@@ -72,7 +73,28 @@ export default function AIChatModal({
   const handleClearHistory = () => {
     setMessages([]);
     setCurrentResponse('');
+    streamingResponseRef.current = '';
     message.success('对话已清空');
+  };
+
+  const appendStreamingResponse = () => {
+    const content = streamingResponseRef.current;
+    if (!content.trim()) {
+      setCurrentResponse('');
+      streamingResponseRef.current = '';
+      return;
+    }
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: 'assistant',
+        content,
+        timestamp: new Date(),
+      },
+    ]);
+    setCurrentResponse('');
+    streamingResponseRef.current = '';
   };
 
   // 发送消息
@@ -87,12 +109,17 @@ export default function AIChatModal({
       return;
     }
 
+    const prompt = inputValue.trim();
+    const controller = new AbortController();
+
     const userMessage: Message = {
       role: 'user',
-      content: inputValue.trim(),
+      content: prompt,
       timestamp: new Date(),
     };
 
+    abortControllerRef.current = controller;
+    streamingResponseRef.current = '';
     setMessages((prev) => [...prev, userMessage]);
     setInputValue('');
     setIsStreaming(true);
@@ -100,25 +127,19 @@ export default function AIChatModal({
 
     const callbacks: StreamCallbacks = {
       onToken: (token) => {
+        streamingResponseRef.current += token;
         setCurrentResponse((prev) => prev + token);
       },
       onComplete: () => {
         setIsStreaming(false);
-        if (currentResponse) {
-          setMessages((prev) => [
-            ...prev,
-            {
-              role: 'assistant',
-              content: currentResponse,
-              timestamp: new Date(),
-            },
-          ]);
-        }
+        abortControllerRef.current = null;
+        appendStreamingResponse();
       },
       onError: (error) => {
         setIsStreaming(false);
+        abortControllerRef.current = null;
+        appendStreamingResponse();
         message.error(`AI 对话失败：${error.message}`);
-        setCurrentResponse('');
       },
     };
 
@@ -129,9 +150,10 @@ export default function AIChatModal({
     };
 
     try {
-      await chatStream(userMessage.content, callbacks, context);
+      await chatStream(prompt, callbacks, context, controller.signal);
     } catch (error: unknown) {
       setIsStreaming(false);
+      abortControllerRef.current = null;
       const errorMessage = error instanceof Error ? error.message : '未知错误';
       message.error(`发送失败：${errorMessage}`);
     }
@@ -141,7 +163,9 @@ export default function AIChatModal({
   const handleStopGeneration = () => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
+      abortControllerRef.current = null;
       setIsStreaming(false);
+      appendStreamingResponse();
       message.info('生成已停止');
     }
   };

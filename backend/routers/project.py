@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from db.session import get_db
 from schemas.project import ProjectCreate, ProjectUpdate, ProjectResponse
-from schemas.common import Response, PageResponse
+from schemas.common import PageResponse
 from services.project_service import ProjectService
 from routers.auth import get_current_user
 from models.user import User
@@ -78,7 +78,7 @@ async def update_project(
 ):
     """更新项目信息"""
     service = ProjectService(db)
-    project = await service.update_project(project_id, project_data)
+    project = await service.get_project(project_id)
     if not project:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -90,7 +90,8 @@ async def update_project(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="无权修改该项目"
         )
-    return project
+    updated_project = await service.update_project(project_id, project_data)
+    return updated_project
 
 
 @router.delete("/{project_id}", response_model=dict, summary="删除项目")

@@ -83,6 +83,57 @@ def _build_system_prompt(context_type: str, project: Optional[Project] = None) -
     return system_prompt
 
 
+async def _get_project_for_chat(
+    project_id: str,
+    db: AsyncSession,
+    current_user: User,
+) -> Project:
+    """校验项目存在且属于当前用户。"""
+    from services.project_service import ProjectService
+
+    project_service = ProjectService(db)
+    project = await project_service.get_project(project_id)
+
+    if not project:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="项目不存在",
+        )
+
+    if project.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权访问该项目",
+        )
+
+    return project
+
+
+async def _validate_chat_chapter(
+    project_id: str,
+    chapter_id: Optional[str],
+    db: AsyncSession,
+) -> None:
+    """校验章节存在且属于当前项目。"""
+    if not chapter_id:
+        return
+
+    from services.chapter_service import ChapterService
+
+    chapter_service = ChapterService(db)
+    chapter = await chapter_service.get_chapter_by_id(chapter_id)
+    if not chapter:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="章节不存在",
+        )
+    if chapter.project_id != project_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="章节不属于该项目",
+        )
+
+
 async def _generate_chat_stream(
     prompt: str,
     system_prompt: str,
@@ -140,38 +191,8 @@ async def chat(
     - inspiration: 灵感激发
     - diagnosis: 问题诊断
     """
-    # 验证项目权限
-    from services.project_service import ProjectService
-    project_service = ProjectService(db)
-    project = await project_service.get_project(request.project_id)
-
-    if not project:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="项目不存在"
-        )
-
-    if project.user_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="无权访问该项目"
-        )
-
-    # 如果有 chapter_id，验证章节存在
-    if request.chapter_id:
-        from services.chapter_service import ChapterService
-        chapter_service = ChapterService(db)
-        chapter = await chapter_service.get_chapter(request.chapter_id)
-        if not chapter:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="章节不存在"
-            )
-        if chapter.project_id != request.project_id:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="章节不属于该项目"
-            )
+    project = await _get_project_for_chat(request.project_id, db, current_user)
+    await _validate_chat_chapter(request.project_id, request.chapter_id, db)
 
     # 保存用户消息
     user_message = ChatMessageCreate(
@@ -291,22 +312,8 @@ async def send_message(
 
     适用于需要完整响应后处理的场景
     """
-    # 验证项目权限
-    from services.project_service import ProjectService
-    project_service = ProjectService(db)
-    project = await project_service.get_project(request.project_id)
-
-    if not project:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="项目不存在"
-        )
-
-    if project.user_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="无权访问该项目"
-        )
+    project = await _get_project_for_chat(request.project_id, db, current_user)
+    await _validate_chat_chapter(request.project_id, request.chapter_id, db)
 
     # 保存用户消息
     user_message = ChatMessageCreate(

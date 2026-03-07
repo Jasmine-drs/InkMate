@@ -103,7 +103,7 @@ async def get_trackings(
         tracking_type=tracking_type,
         entity_id=entity_id,
         skip=skip,
-        page_size=page_size
+        limit=page_size
     )
 
     return PageResponse(

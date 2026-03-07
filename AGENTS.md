@@ -28,7 +28,7 @@ AI 单元剧小说创作助手 (InkMate) - 一款人机协作的 AI 小说创作
 - Edit Policy: 默认使用“Auto-accept plan”（先给出计划，随后自动执行，无需逐步确认）。
 - Checkpointing: 每轮重大变更后，**必须**更新 `PLAN.md` 与 `TASKS.md`，以便断点续跑。
 - Validation First: 任何子任务完成后，都要跑对应校验（构建/测试/脚本），不通过则自我修复后再进入下一个任务。
-- Git Discipline: 每完成一次可独立提交的任务，并且相关校验通过后，**必须**立即执行一次 Git 提交，确保变更按任务粒度落盘。
+- Git Discipline: 每完成一次可独立提交的任务，并且相关校验通过后，**必须**立即执行一次 Git 提交，提交信息需要中文描述，确保变更按任务粒度落盘。
 
 ## 开发命令
 
@@ -36,7 +36,7 @@ AI 单元剧小说创作助手 (InkMate) - 一款人机协作的 AI 小说创作
 ```bash
 cd backend
 # 使用 conda 虚拟环境 (WSL)
-source /mnt/d/code/tool/data/miniconda3/envs/InkMate/bin/activate
+source /mnt/d/code/tool/data/miniconda3/envs/InkMate/python.exe
 pip install -r requirements.txt
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```

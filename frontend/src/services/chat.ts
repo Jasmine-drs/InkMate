@@ -52,13 +52,11 @@ export const chat = async (
 export const chatStream = async (
   prompt: string,
   callbacks: StreamCallbacks,
-  context?: ChatContextType
+  context?: ChatContextType,
+  signal?: AbortSignal
 ): Promise<void> => {
   const token = localStorage.getItem('access_token');
-  let fullContent = '';
   let buffer = '';
-
-  const controller = new AbortController();
 
   try {
     const response = await fetch('/api/chat', {
@@ -76,7 +74,7 @@ export const chatStream = async (
         outline: context?.outline,
         characters: context?.characters,
       }),
-      signal: controller.signal,
+      signal,
     });
 
     if (!response.ok) {
@@ -114,7 +112,6 @@ export const chatStream = async (
                   .replace(/\\n/g, '\n')
                   .replace(/\\"/g, '"')
                   .replace(/\\\\/g, '\\');
-                fullContent += unescapedToken;
                 callbacks.onToken(unescapedToken);
               } else if (parsed.error) {
                 throw new Error(parsed.error);
